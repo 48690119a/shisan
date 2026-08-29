@@ -259,7 +259,7 @@
       </div>
       <div class="field">
         <label>金額</label>
-        <input type="number" id="f_amount" class="amount" placeholder="0">
+        <input type="text" inputmode="decimal" id="f_amount" class="amount" placeholder="0">
       </div>
       <div class="field full">
         <label>メモ（任意）</label>
@@ -543,7 +543,7 @@ function render() {
       <div class="card-body">
         <div class="field full">
           <label>金額（${isUsd ? 'US$' : '円'}）</label>
-          <input type="number" step="${isUsd ? '0.01' : '1'}" class="amount amount-input" data-id="${acc.id}" value="${acc.amount}">
+          <input type="text" inputmode="decimal" class="amount amount-input" data-id="${acc.id}" value="${acc.amount !== '' && acc.amount !== null && !isNaN(acc.amount) ? Number(acc.amount).toLocaleString('ja-JP', {maximumFractionDigits: 2}) : ''}">
         </div>
         ${isUsd ? `
         <div class="jpy-equiv">
@@ -577,7 +577,11 @@ function render() {
     setFxNote((fxManual ? '手動設定' : '自動取得') + '：' + fmtDate(fxFetchedAt));
   }
 
-  list.querySelectorAll('.amount-input').forEach(inp => inp.addEventListener('change', onAmountChange));
+  list.querySelectorAll('.amount-input').forEach(inp => {
+    inp.addEventListener('focus', onAmountFocus);
+    inp.addEventListener('blur', onAmountBlur);
+    inp.addEventListener('change', onAmountChange);
+  });
   list.querySelectorAll('.note-input').forEach(inp => inp.addEventListener('change', onNoteChange));
   list.querySelectorAll('.remove-btn').forEach(btn => btn.addEventListener('click', onRemove));
 
@@ -591,15 +595,47 @@ function escapeHtml(str) {
   return d.innerHTML;
 }
 
+function onAmountFocus(e) {
+  const id = e.target.dataset.id;
+  const acc = accounts.find(a => a.id === id);
+  if (!acc) return;
+  // フォーカス時はカンマを外した純粋な数値にする
+  e.target.value = acc.amount !== 0 ? acc.amount : '';
+}
+
+function onAmountBlur(e) {
+  const id = e.target.dataset.id;
+  const acc = accounts.find(a => a.id === id);
+  if (!acc) return;
+  const val = Number(String(e.target.value).replace(/,/g, '')) || 0;
+  acc.amount = val;
+  acc.updatedAt = new Date().toISOString();
+  saveAccounts();
+  // フォーカスを外したときに3桁区切りにする
+  e.target.value = val !== 0 ? val.toLocaleString('ja-JP', {maximumFractionDigits: 2}) : '';
+  renderAllocation();
+  renderTrend();
+  
+  const total = accounts.reduce((s, a) => s + toJpy(a), 0);
+  document.getElementById('totalAmount').innerHTML = `<span class="yen">¥</span>${fmtNum(total)}`;
+  
+  const latest = accounts.reduce((max, a) => {
+    if (!a.updatedAt) return max;
+    return (!max || new Date(a.updatedAt) > new Date(max)) ? a.updatedAt : max;
+  }, null);
+  document.getElementById('updatedAt').textContent = latest ? fmtDate(latest) : '口座を追加して記帳を始めましょう';
+}
+
 function onAmountChange(e) {
   const id = e.target.dataset.id;
   const acc = accounts.find(a => a.id === id);
   if (!acc) return;
-  acc.amount = Number(e.target.value) || 0;
+  const val = Number(String(e.target.value).replace(/,/g, '')) || 0;
+  acc.amount = val;
   acc.updatedAt = new Date().toISOString();
   saveAccounts();
-  render();
 }
+
 function onNoteChange(e) {
   const id = e.target.dataset.id;
   const acc = accounts.find(a => a.id === id);
@@ -628,7 +664,7 @@ document.getElementById('confirmAddBtn').addEventListener('click', () => {
   const inst = document.getElementById('f_inst').value.trim();
   const product = document.getElementById('f_product').value.trim();
   const currency = document.getElementById('f_currency').value;
-  const amount = Number(document.getElementById('f_amount').value) || 0;
+  const amount = Number(String(document.getElementById('f_amount').value).replace(/,/g, '')) || 0;
   const note = document.getElementById('f_note').value.trim();
   if (!inst) { document.getElementById('f_inst').focus(); return; }
   accounts.push({
@@ -662,7 +698,6 @@ function clearAddForm() {
   document.getElementById('f_note').value = '';
 }
 
-// 起動時にログインなしですぐ口座データを読み込み
 loadAccounts();
 </script>
 </body>
