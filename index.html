@@ -6,6 +6,29 @@
 <title>資産帳</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+<!-- Firebase App & Firestore SDKs -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+  import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBTF7NFkY8E8LFrMfPK2I3-V0LuvXKeXu4",
+    authDomain: "shisan-45812.firebaseapp.com",
+    projectId: "shisan-45812",
+    storageBucket: "shisan-45812.firebasestorage.app",
+    messagingSenderId: "296170859424",
+    appId: "1:296170859424:web:ae784dd0b8f334df62d2c55",
+    measurementId: "G-MCDLXLJK39"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  window.db = db;
+  window.firebaseModules = { doc, getDoc, setDoc, onSnapshot };
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+
 <style>
   :root {
     --bg: #F4F5F7;
@@ -291,19 +314,17 @@
     </div>
 
     <footer class="foot-note">
-      数値はこのブラウザにのみ保存されます／為替レートは参考値です
+      数値はFirestoreに同期されます／為替レートは参考値です
     </footer>
   </div>
 
   <div class="save-toast" id="saveToast">記帳しました</div>
 
 <script>
-const STORAGE_KEY = 'accounts';
 const FX_KEY = 'fx_usd_jpy';
-const SNAPSHOT_KEY = 'monthly_snapshots';
-const LAST_CHECK_KEY = 'last_month_check';
 const CHART_COLORS = ['#1F3A54', '#C1443D', '#D9A441', '#1E7F5C', '#6B4E9A', '#3D8B9E', '#B5623F', '#5A6B8C'];
 let accounts = [];
+let snapshots = [];
 let fxRate = null;
 let fxFetchedAt = null;
 let fxManual = false;
@@ -335,35 +356,48 @@ function ymLabel(ymStr) {
   const [y, m] = ymStr.split('-');
   return `${y}/${Number(m)}`;
 }
+
 function getSnapshots() {
+  return snapshots;
+}
+
+async function saveCloudData() {
+  if (!window.db) return;
   try {
-    const raw = localStorage.getItem(SNAPSHOT_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) { return []; }
+    const { doc, setDoc } = window.firebaseModules;
+    await setDoc(doc(window.db, "shisan", "data"), {
+      accounts: accounts,
+      snapshots: snapshots,
+      updatedAt: new Date().toISOString()
+    });
+    showToast();
+  } catch (e) {
+    console.error('クラウド保存に失敗しました', e);
+  }
 }
-function saveSnapshots(list) {
-  localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(list));
-}
+
 function recordSnapshot(targetYm) {
   const total = accounts.reduce((s, a) => s + toJpy(a), 0);
-  let list = getSnapshots();
-  list = list.filter(s => s.ym !== targetYm);
-  list.push({ ym: targetYm, totalJpy: total, recordedAt: new Date().toISOString() });
-  list.sort((a, b) => a.ym.localeCompare(b.ym));
-  saveSnapshots(list);
+  snapshots = snapshots.filter(s => s.ym !== targetYm);
+  snapshots.push({ ym: targetYm, totalJpy: total, recordedAt: new Date().toISOString() });
+  snapshots.sort((a, b) => a.ym.localeCompare(b.ym));
+  saveCloudData();
 }
+
 function checkMonthBoundary() {
   const now = new Date();
   const curYm = ym(now);
+  const LAST_CHECK_KEY = 'last_month_check';
   const lastCheck = localStorage.getItem(LAST_CHECK_KEY);
   if (lastCheck && lastCheck !== curYm) {
-    const existing = getSnapshots().find(s => s.ym === lastCheck);
+    const existing = snapshots.find(s => s.ym === lastCheck);
     if (!existing) recordSnapshot(lastCheck);
   }
   localStorage.setItem(LAST_CHECK_KEY, curYm);
 }
+
 function renderTrend() {
-  const list = getSnapshots().slice().sort((a, b) => b.ym.localeCompare(a.ym));
+  const list = snapshots.slice().sort((a, b) => b.ym.localeCompare(a.ym));
   const el = document.getElementById('trendList');
   const emptyNote = document.getElementById('trendEmptyNote');
   if (list.length === 0) {
@@ -429,14 +463,35 @@ function renderAllocation() {
   center.innerHTML = `<div>総資産</div><div style="font-size:13px;margin-top:2px;">¥${fmtNum(total)}</div>`;
 }
 
-async function loadAccounts() {
+async function initFirestore() {
+  if (!window.db) return;
+  const { doc, getDoc, onSnapshot } = window.firebaseModules;
+  const docRef = doc(window.db, "shisan", "data");
+  
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    accounts = raw ? JSON.parse(raw) : defaultAccounts;
-    accounts.forEach(a => { if (!a.currency) a.currency = 'JPY'; });
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) {
+      accounts = defaultAccounts;
+      snapshots = [];
+      await saveCloudData();
+    }
   } catch (e) {
-    accounts = defaultAccounts;
+    console.error("Firestore初期化エラー:", e);
   }
+
+  onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (data.accounts) accounts = data.accounts;
+      if (data.snapshots) snapshots = data.snapshots;
+      accounts.forEach(a => { if (!a.currency) a.currency = 'JPY'; });
+      checkMonthBoundary();
+      render();
+    }
+  });
+}
+
+async function loadData() {
   try {
     const cachedRaw = localStorage.getItem(FX_KEY);
     if (cachedRaw) {
@@ -446,7 +501,16 @@ async function loadAccounts() {
       fxManual = !!c.manual;
     }
   } catch (e) {}
-  checkMonthBoundary();
+
+  if (window.db) {
+    initFirestore();
+  } else {
+    window.addEventListener('firebase-ready', () => {
+      initFirestore();
+    });
+  }
+
+  accounts = defaultAccounts;
   render();
   fetchRate(true);
 }
@@ -465,10 +529,7 @@ async function onManualRateChange(e) {
 }
 
 async function saveAccounts() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
-    showToast();
-  } catch (e) { console.error('保存に失敗しました', e); }
+  await saveCloudData();
 }
 
 async function fetchRate(isInitial) {
@@ -599,7 +660,6 @@ function onAmountFocus(e) {
   const id = e.target.dataset.id;
   const acc = accounts.find(a => a.id === id);
   if (!acc) return;
-  // フォーカス時はカンマを外した純粋な数値にする
   e.target.value = acc.amount !== 0 ? acc.amount : '';
 }
 
@@ -611,7 +671,6 @@ function onAmountBlur(e) {
   acc.amount = val;
   acc.updatedAt = new Date().toISOString();
   saveAccounts();
-  // フォーカスを外したときに3桁区切りにする
   e.target.value = val !== 0 ? val.toLocaleString('ja-JP', {maximumFractionDigits: 2}) : '';
   renderAllocation();
   renderTrend();
@@ -698,7 +757,7 @@ function clearAddForm() {
   document.getElementById('f_note').value = '';
 }
 
-loadAccounts();
+loadData();
 </script>
 </body>
 </html>
