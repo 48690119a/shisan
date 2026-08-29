@@ -601,30 +601,37 @@ async function saveAccounts() {
 
 async function fetchRate(isInitial) {
   const btn = document.getElementById('fxRefreshBtn');
-  btn.classList.add('loading');
-  setFxNote('取得を試みています…');
+  if (btn) btn.classList.add('loading');
+  setFxNote('取得中...');
+  
   try {
-    const res = await fetch('https://api.frankfurter.app/latest?from=USD&to=JPY');
-    if (!res.ok) throw new Error('rate fetch failed');
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    if (!res.ok) throw new Error('通信エラーが発生しました');
+    
     const data = await res.json();
     const rate = data && data.rates && data.rates.JPY;
-    if (!rate) throw new Error('no rate in response');
-    fxRate = rate;
+    
+    if (!rate) throw new Error('レートが取得できませんでした');
+    
+    fxRate = Number(rate);
     fxFetchedAt = new Date().toISOString();
     fxManual = false;
+    
     localStorage.setItem(FX_KEY, JSON.stringify({ rate: fxRate, fetchedAt: fxFetchedAt, manual: false }));
-    setFxNote('自動取得しました');
+    setFxNote('自動取得成功：' + fmtDate(fxFetchedAt));
+    
   } catch (e) {
-    console.error('為替レート取得エラー', e);
+    console.error('為替レート取得エラー:', e);
     if (!fxRate) {
       fxRate = FALLBACK_RATE;
       fxFetchedAt = null;
       fxManual = true;
     }
-    setFxNote('自動取得できません。手動でレートを入力してください');
+    setFxNote('取得失敗。手動で設定してください');
+  } finally {
+    if (btn) btn.classList.remove('loading');
+    render();
   }
-  btn.classList.remove('loading');
-  render();
 }
 
 function setFxNote(text) {
