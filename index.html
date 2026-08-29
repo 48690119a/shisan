@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>資産帳</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F5F7;
+    --surface: #FFFFFF;
+    --surface-soft: #EEF0F3;
+    --border: rgba(20,22,30,0.08);
+    --ink: #14161B;
+    --ink-soft: #6B7078;
+    --ink-faint: #A0A4AC;
+    --accent: #1F3A54;
+    --accent-2: #3D6B8A;
+    --accent-soft: #E8EEF3;
+    --up: #1E7F5C;
+    --down: #C1443D;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body { min-height: 100vh; padding-bottom: 60px; }
+
+  .wrap { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+
+  header {
+    background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%);
+    color: #FFFFFF;
+    padding: 22px 20px 20px;
+    border-radius: 20px;
+    margin-top: 14px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(31,58,84,0.18);
+  }
+  header::before {
+    content: "";
+    position: absolute;
+    right: -60px; top: -70px;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 70%);
+  }
+  .eyebrow { font-size: 12px; letter-spacing: 0.04em; color: rgba(255,255,255,0.7); font-weight: 500; position: relative; }
+  .total-label { margin-top: 14px; font-size: 12px; color: rgba(255,255,255,0.65); letter-spacing: 0.02em; position: relative; }
+  .total-amount {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-size: 38px; font-weight: 900;
+    color: #FFFFFF; margin-top: 2px;
+    letter-spacing: -0.01em; word-break: break-all;
+    font-variant-numeric: tabular-nums;
+    position: relative;
+  }
+  .total-amount .yen { font-size: 20px; margin-right: 3px; font-weight: 700; color: rgba(255,255,255,0.75); }
+  .updated-at { margin-top: 8px; font-size: 11.5px; color: rgba(255,255,255,0.55); position: relative; }
+
+  .fx-bar {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,0.16);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: rgba(255,255,255,0.75);
+    position: relative;
+  }
+  .fx-refresh {
+    border: none;
+    background: rgba(255,255,255,0.16);
+    color: #FFFFFF;
+    font-size: 11.5px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+  }
+  .fx-refresh:active { background: rgba(255,255,255,0.26); }
+  .fx-refresh.loading { opacity: 0.5; }
+  .fx-rate-input {
+    width: 60px;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    font-weight: 700;
+    color: #FFFFFF;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.4);
+    font-size: 12.5px;
+    padding: 2px 2px;
+    text-align: right;
+  }
+  .fx-rate-input:focus { outline: none; border-bottom: 1.4px solid #FFFFFF; }
+  .fx-note { margin-top: 6px; font-size: 10.5px; color: rgba(255,255,255,0.5); text-align: right; position: relative; }
+
+  .section-label { display: flex; align-items: center; gap: 8px; margin: 28px 0 12px 2px; }
+  .section-label .txt { font-size: 12.5px; font-weight: 700; letter-spacing: 0.02em; color: var(--ink); }
+  .section-label::before {
+    content: "";
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    flex: none;
+  }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px 16px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(20,22,30,0.03); }
+
+  .card-top { display: flex; align-items: center; gap: 12px; }
+
+  .hanko {
+    flex: none; width: 36px; height: 36px; border-radius: 11px;
+    color: #FFFFFF; display: flex; align-items: center; justify-content: center;
+    font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 700; font-size: 14px;
+  }
+
+  .card-heading { flex: 1; min-width: 0; }
+  .inst-name { font-size: 14.5px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+  .currency-tag { font-size: 9.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.03em; }
+  .product-name { font-size: 11.5px; color: var(--ink-soft); margin-top: 1px; }
+
+  .remove-btn { flex: none; border: none; background: none; color: var(--ink-faint); font-size: 18px; line-height: 1; padding: 4px 6px; cursor: pointer; }
+  .remove-btn:hover { color: var(--down); }
+
+  .card-body { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 10.5px; color: var(--ink-soft); letter-spacing: 0.02em; }
+  .field input, .field select {
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+    border: none; border-bottom: 1px solid var(--border);
+    background: transparent; font-size: 14px; padding: 5px 2px; color: var(--ink);
+  }
+  .field input:focus, .field select:focus { outline: none; border-bottom: 1.4px solid var(--accent); }
+  .field input.amount { font-weight: 700; font-size: 17px; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  .jpy-equiv {
+    grid-column: 1 / -1;
+    background: var(--accent-soft);
+    border-radius: 10px;
+    padding: 9px 11px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+  .jpy-equiv .val {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .row-note { margin-top: 10px; font-size: 10.5px; color: var(--ink-faint); display: flex; justify-content: space-between; }
+
+  .add-btn {
+    width: 100%; padding: 13px; margin-top: 6px;
+    border-radius: 12px; border: none;
+    background: var(--accent-soft); color: var(--accent);
+    font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 700; font-size: 13px;
+    letter-spacing: 0.01em; cursor: pointer;
+  }
+  .add-btn:active { opacity: 0.8; }
+
+  .add-form { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-top: 6px; gap: 10px; grid-template-columns: 1fr 1fr; box-shadow: 0 1px 3px rgba(20,22,30,0.03); }
+  .add-form.open { display: grid; }
+  .add-form .field.full { grid-column: 1/-1; }
+  .add-form-actions { grid-column: 1/-1; display: flex; gap: 8px; margin-top: 4px; }
+  .btn-primary, .btn-ghost { flex: 1; padding: 11px; border-radius: 10px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; font-family: 'Zen Kaku Gothic New', sans-serif; }
+  .btn-primary { background: var(--accent); color: #FFFFFF; }
+  .btn-ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--border); }
+
+  .save-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #FFFFFF; font-size: 12px; padding: 9px 18px; border-radius: 20px; opacity: 0; transition: opacity 0.25s, transform 0.25s; pointer-events: none; letter-spacing: 0.02em; z-index: 10; }
+  .save-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-soft); font-size: 13px; }
+
+  footer.foot-note { text-align: center; font-size: 10.5px; color: var(--ink-faint); margin-top: 26px; letter-spacing: 0.02em; }
+  footer.foot-note .links { display: block; margin-top: 8px; }
+  footer.foot-note button.link-btn {
+    border: none; background: none; color: var(--ink-soft); font-size: 10.5px;
+    text-decoration: underline; cursor: pointer; font-family: 'Zen Kaku Gothic New', sans-serif;
+    padding: 0 4px;
+  }
+
+  /* Auth overlay */
+  .auth-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .auth-overlay.hidden { display: none; }
+  .auth-box { width: 100%; max-width: 320px; }
+  .auth-eyebrow { font-size: 12px; letter-spacing: 0.04em; color: rgba(255,255,255,0.65); font-weight: 500; text-align: center; }
+  .auth-title { font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 24px; font-weight: 900; color: #FFFFFF; text-align: center; margin-top: 6px; margin-bottom: 28px; }
+  .auth-field { margin-bottom: 14px; }
+  .auth-field label { display: block; font-size: 11px; color: rgba(255,255,255,0.7); letter-spacing: 0.02em; margin-bottom: 5px; }
+  .auth-field input {
+    width: 100%; padding: 11px 12px;
+    border-radius: 10px; border: 1px solid rgba(255,255,255,0.22);
+    background: rgba(255,255,255,0.08); color: #FFFFFF;
+    font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 14px;
+  }
+  .auth-field input:focus { outline: none; border-color: #FFFFFF; }
+  .auth-submit {
+    width: 100%; padding: 13px; margin-top: 4px;
+    border-radius: 10px; border: none;
+    background: #FFFFFF; color: var(--accent);
+    font-weight: 700; font-size: 14px; cursor: pointer;
+    font-family: 'Zen Kaku Gothic New', sans-serif;
+  }
+  .auth-submit:active { opacity: 0.85; }
+  .auth-error { color: #FFD4CE; font-size: 12px; margin-top: 10px; text-align: center; min-height: 16px; }
+  .auth-switch { text-align: center; margin-top: 18px; font-size: 11.5px; color: rgba(255,255,255,0.6); }
+  .auth-switch button { background: none; border: none; color: #FFFFFF; text-decoration: underline; cursor: pointer; font-size: 11.5px; }
+
+  /* Change credentials modal */
+  .modal-backdrop {
+    position: fixed; inset: 0; z-index: 90;
+    background: rgba(20,22,30,0.5);
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .modal-backdrop.hidden { display: none; }
+  .modal-box {
+    width: 100%; max-width: 320px;
+    background: var(--surface); border-radius: 16px; padding: 22px;
+  }
+  .modal-box h3 { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 16px; }
+  .modal-box .field { margin-bottom: 12px; }
+
+  /* Allocation donut */
+  .donut-wrap { position: relative; width: 138px; height: 138px; margin: 6px auto 18px; }
+  .donut-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .donut-center {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--ink-soft); text-align: center;
+    line-height: 1.5; flex-direction: column;
+  }
+  .donut-center div:last-child { font-weight: 700; color: var(--ink); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .legend { display: flex; flex-direction: column; gap: 10px; }
+  .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
+  .legend-name { flex: 1; color: var(--ink); }
+  .legend-pct { font-weight: 700; color: var(--ink); width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* Monthly trend */
+  .trend-head { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
+  .trend-head-label { font-size: 11.5px; color: var(--ink-soft); }
+  .trend-record-btn { margin-top: 0; padding: 11px; font-size: 12.5px; }
+  .trend-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 0; border-top: 1px solid var(--border);
+  }
+  .trend-row:first-child { border-top: none; }
+  .trend-month { font-size: 12px; color: var(--ink-soft); width: 58px; }
+  .trend-amount { font-weight: 700; font-size: 14.5px; color: var(--ink); flex: 1; text-align: right; font-variant-numeric: tabular-nums; }
+  .trend-diff { font-size: 11px; width: 96px; text-align: right; font-variant-numeric: tabular-nums; }
+  .trend-diff.up { color: var(--up); }
+  .trend-diff.down { color: var(--down); }
+  .trend-diff.flat { color: var(--ink-faint); }
+</style>
+</head>
+<body>
+  <!-- Auth overlay: setup (first run) or login -->
+  <div class="auth-overlay hidden" id="authOverlay">
+    <div class="auth-box">
+      <div class="auth-eyebrow">ASSET LEDGER</div>
+      <div class="auth-title" id="authTitle">資産帳</div>
+
+      <div id="setupForm">
+        <div class="auth-field">
+          <label>ID</label>
+          <input type="text" id="setupId" autocomplete="username">
+        </div>
+        <div class="auth-field">
+          <label>パスワード</label>
+          <input type="password" id="setupPw" autocomplete="new-password">
+        </div>
+        <div class="auth-field">
+          <label>パスワード（確認）</label>
+          <input type="password" id="setupPw2" autocomplete="new-password">
+        </div>
+        <button class="auth-submit" id="setupSubmit">登録する</button>
+        <div class="auth-error" id="setupError"></div>
+      </div>
+
+      <div id="loginForm" style="display:none;">
+        <div class="auth-field">
+          <label>ID</label>
+          <input type="text" id="loginId" autocomplete="username">
+        </div>
+        <div class="auth-field">
+          <label>パスワード</label>
+          <input type="password" id="loginPw" autocomplete="current-password">
+        </div>
+        <button class="auth-submit" id="loginSubmit">ログイン</button>
+        <div class="auth-error" id="loginError"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change ID/password modal -->
+  <div class="modal-backdrop hidden" id="changeModal">
+    <div class="modal-box">
+      <h3>IDとパスワードを変更</h3>
+      <div class="field">
+        <label>現在のパスワード</label>
+        <input type="password" id="curPw">
+      </div>
+      <div class="field">
+        <label>新しいID</label>
+        <input type="text" id="newId">
+      </div>
+      <div class="field">
+        <label>新しいパスワード</label>
+        <input type="password" id="newPw">
+      </div>
+      <div class="field">
+        <label>新しいパスワード（確認）</label>
+        <input type="password" id="newPw2">
+      </div>
+      <div class="auth-error" id="changeError"></div>
+      <div class="add-form-actions" style="margin-top:12px;">
+        <button class="btn-ghost" id="changeCancelBtn">キャンセル</button>
+        <button class="btn-primary" id="changeSubmitBtn">変更する</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap" id="appWrap" style="display:none;">
+    <header>
+      <div class="eyebrow">資産帳</div>
+      <div class="total-label">総資産（円換算）</div>
+      <div class="total-amount" id="totalAmount"><span class="yen">¥</span>0</div>
+      <div class="updated-at" id="updatedAt">口座を追加して記帳を始めましょう</div>
+      <div class="fx-bar">
+        <span>1USD＝</span>
+        <input type="number" step="0.01" id="fxRateInput" class="fx-rate-input" value="">
+        <span>円</span>
+        <button class="fx-refresh" id="fxRefreshBtn">自動取得</button>
+      </div>
+      <div class="fx-note" id="fxNote"></div>
+    </header>
+
+    <div class="section-label"><span class="txt">口座一覧</span></div>
+
+    <div id="cardList"></div>
+
+    <button class="add-btn" id="showAddBtn">＋ 口座を追加する</button>
+
+    <div class="add-form" id="addForm">
+      <div class="field full">
+        <label>金融機関</label>
+        <input type="text" id="f_inst" placeholder="例：あおぞら銀行">
+      </div>
+      <div class="field full">
+        <label>商品名</label>
+        <input type="text" id="f_product" placeholder="例：貯金">
+      </div>
+      <div class="field">
+        <label>通貨</label>
+        <select id="f_currency">
+          <option value="JPY">円（JPY）</option>
+          <option value="USD">ドル（USD）</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>金額</label>
+        <input type="number" id="f_amount" class="amount" placeholder="0">
+      </div>
+      <div class="field full">
+        <label>メモ（任意）</label>
+        <input type="text" id="f_note" placeholder="例：円定期 満期2027年">
+      </div>
+      <div class="add-form-actions">
+        <button class="btn-ghost" id="cancelAddBtn">キャンセル</button>
+        <button class="btn-primary" id="confirmAddBtn">記帳する</button>
+      </div>
+    </div>
+
+    <div class="section-label"><span class="txt">資産配分</span></div>
+    <div class="card" id="allocationCard">
+      <div class="donut-wrap">
+        <svg viewBox="0 0 120 120" class="donut-svg" id="donutSvg"></svg>
+        <div class="donut-center" id="donutCenter"></div>
+      </div>
+      <div class="legend" id="legendList"></div>
+    </div>
+
+    <div class="section-label"><span class="txt">月次推移</span></div>
+    <div class="card">
+      <div class="trend-head">
+        <span class="trend-head-label">月末時点の総資産を記録</span>
+        <button class="add-btn trend-record-btn" id="recordSnapshotBtn">＋ 今月分を記録する</button>
+      </div>
+      <div id="trendList"></div>
+      <div class="row-note" id="trendEmptyNote"></div>
+    </div>
+
+    <footer class="foot-note">
+      数値はこのブラウザにのみ保存されます／為替レートは参考値です
+      <span class="links">
+        <button class="link-btn" id="openChangeBtn">IDとパスワードを変更</button>
+        ｜
+        <button class="link-btn" id="logoutBtn">ログアウト</button>
+      </span>
+    </footer>
+  </div>
+
+  <div class="save-toast" id="saveToast">記帳しました</div>
+
+<script>
+const STORAGE_KEY = 'accounts';
+const FX_KEY = 'fx_usd_jpy';
+const AUTH_KEY = 'auth_credentials';
+const SESSION_KEY = 'unlocked';
+const SNAPSHOT_KEY = 'monthly_snapshots';
+const LAST_CHECK_KEY = 'last_month_check';
+const CHART_COLORS = ['#1F3A54', '#C1443D', '#D9A441', '#1E7F5C', '#6B4E9A', '#3D8B9E', '#B5623F', '#5A6B8C'];
+let accounts = [];
+let fxRate = null;
+let fxFetchedAt = null;
+let fxManual = false;
+const FALLBACK_RATE = 159.5; // 2026年8月時点の参考値。自動取得できない場合の初期値
+
+const defaultAccounts = [
+  { id: 'a1', institution: 'あおぞら銀行', product: '貯金', currency: 'JPY', amount: 0, note: '', updatedAt: null },
+  { id: 'a2', institution: '明治安田生命', product: '個人年金', currency: 'JPY', amount: 0, note: '', updatedAt: null },
+  { id: 'a3', institution: '楽天証券', product: '株式・投信', currency: 'JPY', amount: 0, note: '', updatedAt: null },
+  { id: 'a4', institution: 'プルデンシャル', product: 'リタイアメントインカム', currency: 'USD', amount: 0, note: '', updatedAt: null },
+];
+
+function fmtNum(n, digits) {
+  return Number(n).toLocaleString('ja-JP', { maximumFractionDigits: digits || 0, minimumFractionDigits: 0 });
+}
+function fmtDate(iso) {
+  if (!iso) return '未記帳';
+  const d = new Date(iso);
+  return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}時点`;
+}
+function hankoChar(name) { return name ? name.charAt(0) : '？'; }
+function toJpy(acc) {
+  if (acc.currency === 'USD') return (Number(acc.amount) || 0) * (fxRate || 0);
+  return Number(acc.amount) || 0;
+}
+
+/* ===== Monthly snapshots ===== */
+function ym(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+function ymLabel(ymStr) {
+  const [y, m] = ymStr.split('-');
+  return `${y}/${Number(m)}`;
+}
+function getSnapshots() {
+  try {
+    const raw = localStorage.getItem(SNAPSHOT_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+function saveSnapshots(list) {
+  localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(list));
+}
+function recordSnapshot(targetYm) {
+  const total = accounts.reduce((s, a) => s + toJpy(a), 0);
+  let list = getSnapshots();
+  list = list.filter(s => s.ym !== targetYm);
+  list.push({ ym: targetYm, totalJpy: total, recordedAt: new Date().toISOString() });
+  list.sort((a, b) => a.ym.localeCompare(b.ym));
+  saveSnapshots(list);
+}
+function checkMonthBoundary() {
+  const now = new Date();
+  const curYm = ym(now);
+  const lastCheck = localStorage.getItem(LAST_CHECK_KEY);
+  if (lastCheck && lastCheck !== curYm) {
+    // 月が変わってから初めて開いた: 前回チェック時点の月を「月末実績」として記録（未記録の場合のみ）
+    const existing = getSnapshots().find(s => s.ym === lastCheck);
+    if (!existing) recordSnapshot(lastCheck);
+  }
+  localStorage.setItem(LAST_CHECK_KEY, curYm);
+}
+function renderTrend() {
+  const list = getSnapshots().slice().sort((a, b) => b.ym.localeCompare(a.ym));
+  const el = document.getElementById('trendList');
+  const emptyNote = document.getElementById('trendEmptyNote');
+  if (list.length === 0) {
+    el.innerHTML = '';
+    emptyNote.textContent = 'まだ記録がありません。月が変わると自動で前月分が記録されます。';
+    return;
+  }
+  emptyNote.textContent = '';
+  el.innerHTML = list.map((snap, i) => {
+    const prev = list[i + 1]; // list is newest-first, so i+1 is previous month
+    let diffHtml = '<span class="trend-diff flat">ー</span>';
+    if (prev) {
+      const diff = snap.totalJpy - prev.totalJpy;
+      const pct = prev.totalJpy !== 0 ? (diff / prev.totalJpy * 100) : 0;
+      const cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
+      const sign = diff > 0 ? '+' : '';
+      diffHtml = `<span class="trend-diff ${cls}">${sign}¥${fmtNum(diff)}（${sign}${pct.toFixed(1)}%）</span>`;
+    }
+    return `<div class="trend-row">
+      <span class="trend-month">${ymLabel(snap.ym)}</span>
+      <span class="trend-amount">¥${fmtNum(snap.totalJpy)}</span>
+      ${diffHtml}
+    </div>`;
+  }).join('');
+}
+
+/* ===== Allocation donut chart ===== */
+function renderAllocation() {
+  const svg = document.getElementById('donutSvg');
+  const legend = document.getElementById('legendList');
+  const center = document.getElementById('donutCenter');
+  const values = accounts.map(a => Math.max(0, toJpy(a)));
+  const total = values.reduce((s, v) => s + v, 0);
+
+  if (total <= 0) {
+    svg.innerHTML = `<circle cx="60" cy="60" r="50" fill="none" stroke="var(--surface-soft)" stroke-width="16"/>`;
+    legend.innerHTML = '<div class="row-note">口座に金額を入力すると配分が表示されます</div>';
+    center.innerHTML = '';
+    return;
+  }
+
+  const r = 50, cx = 60, cy = 60;
+  const circumference = 2 * Math.PI * r;
+  let offset = 0;
+  let segs = '';
+  let legendHtml = '';
+  accounts.forEach((acc, i) => {
+    const v = Math.max(0, toJpy(acc));
+    if (v <= 0) return;
+    const pct = v / total;
+    const dash = pct * circumference;
+    const color = CHART_COLORS[i % CHART_COLORS.length];
+    segs += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="16"
+      stroke-dasharray="${dash} ${circumference - dash}" stroke-dashoffset="${-offset}" />`;
+    offset += dash;
+    legendHtml += `<div class="legend-row">
+      <span class="legend-dot" style="background:${color}"></span>
+      <span class="legend-name">${escapeHtml(acc.institution)}</span>
+      <span class="legend-pct">${(pct * 100).toFixed(1)}%</span>
+    </div>`;
+  });
+  svg.innerHTML = segs;
+  legend.innerHTML = legendHtml;
+  center.innerHTML = `<div>総資産</div><div style="font-size:13px;margin-top:2px;">¥${fmtNum(total)}</div>`;
+}
+
+async function loadAccounts() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    accounts = raw ? JSON.parse(raw) : defaultAccounts;
+    accounts.forEach(a => { if (!a.currency) a.currency = 'JPY'; });
+  } catch (e) {
+    accounts = defaultAccounts;
+  }
+  try {
+    const cachedRaw = localStorage.getItem(FX_KEY);
+    if (cachedRaw) {
+      const c = JSON.parse(cachedRaw);
+      fxRate = c.rate;
+      fxFetchedAt = c.fetchedAt;
+      fxManual = !!c.manual;
+    }
+  } catch (e) { /* no cache yet */ }
+  checkMonthBoundary();
+  render();
+  fetchRate(true);
+}
+
+async function onManualRateChange(e) {
+  const val = Number(e.target.value);
+  if (!val || val <= 0) return;
+  fxRate = val;
+  fxManual = true;
+  fxFetchedAt = new Date().toISOString();
+  try {
+    localStorage.setItem(FX_KEY, JSON.stringify({ rate: fxRate, fetchedAt: fxFetchedAt, manual: true }));
+  } catch (err) { console.error(err); }
+  setFxNote('手動で設定したレートです');
+  render();
+}
+
+async function saveAccounts() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(accounts));
+    showToast();
+  } catch (e) { console.error('保存に失敗しました', e); }
+}
+
+async function fetchRate(isInitial) {
+  const btn = document.getElementById('fxRefreshBtn');
+  btn.classList.add('loading');
+  setFxNote('取得を試みています…');
+  try {
+    const res = await fetch('https://api.frankfurter.app/latest?from=USD&to=JPY');
+    if (!res.ok) throw new Error('rate fetch failed');
+    const data = await res.json();
+    const rate = data && data.rates && data.rates.JPY;
+    if (!rate) throw new Error('no rate in response');
+    fxRate = rate;
+    fxFetchedAt = new Date().toISOString();
+    fxManual = false;
+    localStorage.setItem(FX_KEY, JSON.stringify({ rate: fxRate, fetchedAt: fxFetchedAt, manual: false }));
+    setFxNote('自動取得しました');
+  } catch (e) {
+    console.error('為替レート取得エラー', e);
+    if (!fxRate) {
+      fxRate = FALLBACK_RATE;
+      fxFetchedAt = null;
+      fxManual = true;
+    }
+    setFxNote('自動取得できません。手動でレートを入力してください');
+  }
+  btn.classList.remove('loading');
+  render();
+}
+
+function setFxNote(text) {
+  const el = document.getElementById('fxNote');
+  if (el) el.textContent = text;
+}
+
+function showToast() {
+  const t = document.getElementById('saveToast');
+  t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.remove('show'), 1600);
+}
+
+function render() {
+  const list = document.getElementById('cardList');
+  list.innerHTML = '';
+
+  if (accounts.length === 0) {
+    list.innerHTML = '<div class="empty-state">まだ口座が登録されていません</div>';
+  }
+
+  accounts.forEach((acc, i) => {
+    const isUsd = acc.currency === 'USD';
+    const tagColor = CHART_COLORS[i % CHART_COLORS.length];
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-top">
+        <div class="hanko" style="background:${tagColor}">${hankoChar(acc.institution)}</div>
+        <div class="card-heading">
+          <div class="inst-name">${escapeHtml(acc.institution)} ${isUsd ? '<span class="currency-tag">USD</span>' : ''}</div>
+          <div class="product-name">${escapeHtml(acc.product)}</div>
+        </div>
+        <button class="remove-btn" data-id="${acc.id}" title="削除">×</button>
+      </div>
+      <div class="card-body">
+        <div class="field full">
+          <label>金額（${isUsd ? 'US$' : '円'}）</label>
+          <input type="number" step="${isUsd ? '0.01' : '1'}" class="amount amount-input" data-id="${acc.id}" value="${acc.amount}">
+        </div>
+        ${isUsd ? `
+        <div class="jpy-equiv">
+          <span>円換算</span>
+          <span class="val">¥${fmtNum(toJpy(acc))}</span>
+        </div>` : ''}
+        <div class="field full">
+          <label>メモ</label>
+          <input type="text" class="note-input" data-id="${acc.id}" value="${escapeHtml(acc.note || '')}" placeholder="任意のメモ">
+        </div>
+      </div>
+      <div class="row-note"><span>${fmtDate(acc.updatedAt)}</span></div>
+    `;
+    list.appendChild(card);
+  });
+
+  const total = accounts.reduce((s, a) => s + toJpy(a), 0);
+  document.getElementById('totalAmount').innerHTML = `<span class="yen">¥</span>${fmtNum(total)}`;
+
+  const latest = accounts.reduce((max, a) => {
+    if (!a.updatedAt) return max;
+    return (!max || new Date(a.updatedAt) > new Date(max)) ? a.updatedAt : max;
+  }, null);
+  document.getElementById('updatedAt').textContent = latest ? fmtDate(latest) : '口座を追加して記帳を始めましょう';
+
+  const fxInput = document.getElementById('fxRateInput');
+  if (fxInput && document.activeElement !== fxInput) {
+    fxInput.value = fxRate ? fxRate : '';
+  }
+  if (fxRate && fxFetchedAt && !document.getElementById('fxNote').textContent) {
+    setFxNote((fxManual ? '手動設定' : '自動取得') + '：' + fmtDate(fxFetchedAt));
+  }
+
+  list.querySelectorAll('.amount-input').forEach(inp => inp.addEventListener('change', onAmountChange));
+  list.querySelectorAll('.note-input').forEach(inp => inp.addEventListener('change', onNoteChange));
+  list.querySelectorAll('.remove-btn').forEach(btn => btn.addEventListener('click', onRemove));
+
+  renderAllocation();
+  renderTrend();
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function onAmountChange(e) {
+  const id = e.target.dataset.id;
+  const acc = accounts.find(a => a.id === id);
+  if (!acc) return;
+  acc.amount = Number(e.target.value) || 0;
+  acc.updatedAt = new Date().toISOString();
+  saveAccounts();
+  render();
+}
+function onNoteChange(e) {
+  const id = e.target.dataset.id;
+  const acc = accounts.find(a => a.id === id);
+  if (!acc) return;
+  acc.note = e.target.value;
+  acc.updatedAt = new Date().toISOString();
+  saveAccounts();
+}
+function onRemove(e) {
+  const id = e.target.dataset.id;
+  accounts = accounts.filter(a => a.id !== id);
+  saveAccounts();
+  render();
+}
+
+const addForm = document.getElementById('addForm');
+document.getElementById('showAddBtn').addEventListener('click', () => {
+  addForm.classList.add('open');
+  document.getElementById('f_inst').focus();
+});
+document.getElementById('cancelAddBtn').addEventListener('click', () => {
+  addForm.classList.remove('open');
+  clearAddForm();
+});
+document.getElementById('confirmAddBtn').addEventListener('click', () => {
+  const inst = document.getElementById('f_inst').value.trim();
+  const product = document.getElementById('f_product').value.trim();
+  const currency = document.getElementById('f_currency').value;
+  const amount = Number(document.getElementById('f_amount').value) || 0;
+  const note = document.getElementById('f_note').value.trim();
+  if (!inst) { document.getElementById('f_inst').focus(); return; }
+  accounts.push({
+    id: 'a' + Date.now(),
+    institution: inst,
+    product: product || '未分類',
+    currency,
+    amount,
+    note,
+    updatedAt: new Date().toISOString(),
+  });
+  saveAccounts();
+  render();
+  addForm.classList.remove('open');
+  clearAddForm();
+});
+document.getElementById('fxRefreshBtn').addEventListener('click', () => fetchRate(false));
+document.getElementById('fxRateInput').addEventListener('change', onManualRateChange);
+document.getElementById('recordSnapshotBtn').addEventListener('click', () => {
+  const curYm = ym(new Date());
+  recordSnapshot(curYm);
+  renderTrend();
+  showToast();
+});
+
+function clearAddForm() {
+  document.getElementById('f_inst').value = '';
+  document.getElementById('f_product').value = '';
+  document.getElementById('f_currency').value = 'JPY';
+  document.getElementById('f_amount').value = '';
+  document.getElementById('f_note').value = '';
+}
+
+/* ===== Auth ===== */
+async function sha256(text) {
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function getAuth() {
+  try {
+    const raw = localStorage.getItem(AUTH_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function initAuth() {
+  const overlay = document.getElementById('authOverlay');
+  const auth = getAuth();
+
+  if (sessionStorage.getItem(SESSION_KEY) === 'true' && auth) {
+    overlay.classList.add('hidden');
+    unlockApp();
+    return;
+  }
+
+  overlay.classList.remove('hidden');
+  if (auth) {
+    document.getElementById('setupForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
+  } else {
+    document.getElementById('setupForm').style.display = 'block';
+    document.getElementById('loginForm').style.display = 'none';
+  }
+}
+
+function unlockApp() {
+  document.getElementById('authOverlay').classList.add('hidden');
+  document.getElementById('appWrap').style.display = 'block';
+  sessionStorage.setItem(SESSION_KEY, 'true');
+  loadAccounts();
+}
+
+document.getElementById('setupSubmit').addEventListener('click', async () => {
+  const id = document.getElementById('setupId').value.trim();
+  const pw = document.getElementById('setupPw').value;
+  const pw2 = document.getElementById('setupPw2').value;
+  const err = document.getElementById('setupError');
+  if (!id || !pw) { err.textContent = 'IDとパスワードを入力してください'; return; }
+  if (pw !== pw2) { err.textContent = 'パスワードが一致しません'; return; }
+  if (pw.length < 4) { err.textContent = 'パスワードは4文字以上にしてください'; return; }
+  const hash = await sha256(pw);
+  localStorage.setItem(AUTH_KEY, JSON.stringify({ id, hash }));
+  err.textContent = '';
+  unlockApp();
+});
+
+document.getElementById('loginSubmit').addEventListener('click', async () => {
+  const id = document.getElementById('loginId').value.trim();
+  const pw = document.getElementById('loginPw').value;
+  const err = document.getElementById('loginError');
+  const auth = getAuth();
+  if (!auth) { err.textContent = '登録情報がありません'; return; }
+  const hash = await sha256(pw);
+  if (id === auth.id && hash === auth.hash) {
+    err.textContent = '';
+    unlockApp();
+  } else {
+    err.textContent = 'IDまたはパスワードが違います';
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  sessionStorage.removeItem(SESSION_KEY);
+  document.getElementById('appWrap').style.display = 'none';
+  document.getElementById('loginId').value = '';
+  document.getElementById('loginPw').value = '';
+  initAuth();
+});
+
+/* ===== Change credentials ===== */
+const changeModal = document.getElementById('changeModal');
+document.getElementById('openChangeBtn').addEventListener('click', () => {
+  changeModal.classList.remove('hidden');
+});
+document.getElementById('changeCancelBtn').addEventListener('click', () => {
+  changeModal.classList.add('hidden');
+  clearChangeForm();
+});
+document.getElementById('changeSubmitBtn').addEventListener('click', async () => {
+  const curPw = document.getElementById('curPw').value;
+  const newId = document.getElementById('newId').value.trim();
+  const newPw = document.getElementById('newPw').value;
+  const newPw2 = document.getElementById('newPw2').value;
+  const err = document.getElementById('changeError');
+  const auth = getAuth();
+  if (!auth) { err.textContent = '登録情報がありません'; return; }
+  const curHash = await sha256(curPw);
+  if (curHash !== auth.hash) { err.textContent = '現在のパスワードが違います'; return; }
+  if (!newId || !newPw) { err.textContent = '新しいIDとパスワードを入力してください'; return; }
+  if (newPw !== newPw2) { err.textContent = '新しいパスワードが一致しません'; return; }
+  if (newPw.length < 4) { err.textContent = 'パスワードは4文字以上にしてください'; return; }
+  const newHash = await sha256(newPw);
+  localStorage.setItem(AUTH_KEY, JSON.stringify({ id: newId, hash: newHash }));
+  err.textContent = '';
+  changeModal.classList.add('hidden');
+  clearChangeForm();
+  showToast();
+});
+
+function clearChangeForm() {
+  document.getElementById('curPw').value = '';
+  document.getElementById('newId').value = '';
+  document.getElementById('newPw').value = '';
+  document.getElementById('newPw2').value = '';
+  document.getElementById('changeError').textContent = '';
+}
+
+initAuth();
+</script>
+</body>
+</html>
