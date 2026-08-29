@@ -185,59 +185,6 @@
   .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-soft); font-size: 13px; }
 
   footer.foot-note { text-align: center; font-size: 10.5px; color: var(--ink-faint); margin-top: 26px; letter-spacing: 0.02em; }
-  footer.foot-note .links { display: block; margin-top: 8px; }
-  footer.foot-note button.link-btn {
-    border: none; background: none; color: var(--ink-soft); font-size: 10.5px;
-    text-decoration: underline; cursor: pointer; font-family: 'Zen Kaku Gothic New', sans-serif;
-    padding: 0 4px;
-  }
-
-  /* Auth overlay */
-  .auth-overlay {
-    position: fixed; inset: 0; z-index: 100;
-    background: linear-gradient(150deg, var(--accent) 0%, var(--accent-2) 100%);
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .auth-overlay.hidden { display: none; }
-  .auth-box { width: 100%; max-width: 320px; }
-  .auth-eyebrow { font-size: 12px; letter-spacing: 0.04em; color: rgba(255,255,255,0.65); font-weight: 500; text-align: center; }
-  .auth-title { font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 24px; font-weight: 900; color: #FFFFFF; text-align: center; margin-top: 6px; margin-bottom: 28px; }
-  .auth-field { margin-bottom: 14px; }
-  .auth-field label { display: block; font-size: 11px; color: rgba(255,255,255,0.7); letter-spacing: 0.02em; margin-bottom: 5px; }
-  .auth-field input {
-    width: 100%; padding: 11px 12px;
-    border-radius: 10px; border: 1px solid rgba(255,255,255,0.22);
-    background: rgba(255,255,255,0.08); color: #FFFFFF;
-    font-family: 'Zen Kaku Gothic New', sans-serif; font-size: 14px;
-  }
-  .auth-field input:focus { outline: none; border-color: #FFFFFF; }
-  .auth-submit {
-    width: 100%; padding: 13px; margin-top: 4px;
-    border-radius: 10px; border: none;
-    background: #FFFFFF; color: var(--accent);
-    font-weight: 700; font-size: 14px; cursor: pointer;
-    font-family: 'Zen Kaku Gothic New', sans-serif;
-  }
-  .auth-submit:active { opacity: 0.85; }
-  .auth-error { color: #FFD4CE; font-size: 12px; margin-top: 10px; text-align: center; min-height: 16px; }
-  .auth-switch { text-align: center; margin-top: 18px; font-size: 11.5px; color: rgba(255,255,255,0.6); }
-  .auth-switch button { background: none; border: none; color: #FFFFFF; text-decoration: underline; cursor: pointer; font-size: 11.5px; }
-
-  /* Change credentials modal */
-  .modal-backdrop {
-    position: fixed; inset: 0; z-index: 90;
-    background: rgba(20,22,30,0.5);
-    display: flex; align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .modal-backdrop.hidden { display: none; }
-  .modal-box {
-    width: 100%; max-width: 320px;
-    background: var(--surface); border-radius: 16px; padding: 22px;
-  }
-  .modal-box h3 { font-size: 16px; font-weight: 700; color: var(--ink); margin-bottom: 16px; }
-  .modal-box .field { margin-bottom: 12px; }
 
   /* Allocation donut */
   .donut-wrap { position: relative; width: 138px; height: 138px; margin: 6px auto 18px; }
@@ -272,73 +219,8 @@
 </style>
 </head>
 <body>
-  <!-- Auth overlay: setup (first run) or login -->
-  <div class="auth-overlay hidden" id="authOverlay">
-    <div class="auth-box">
-      <div class="auth-eyebrow">ASSET LEDGER</div>
-      <div class="auth-title" id="authTitle">資産帳</div>
 
-      <div id="setupForm">
-        <div class="auth-field">
-          <label>ID</label>
-          <input type="text" id="setupId" autocomplete="username">
-        </div>
-        <div class="auth-field">
-          <label>パスワード</label>
-          <input type="password" id="setupPw" autocomplete="new-password">
-        </div>
-        <div class="auth-field">
-          <label>パスワード（確認）</label>
-          <input type="password" id="setupPw2" autocomplete="new-password">
-        </div>
-        <button class="auth-submit" id="setupSubmit">登録する</button>
-        <div class="auth-error" id="setupError"></div>
-      </div>
-
-      <div id="loginForm" style="display:none;">
-        <div class="auth-field">
-          <label>ID</label>
-          <input type="text" id="loginId" autocomplete="username">
-        </div>
-        <div class="auth-field">
-          <label>パスワード</label>
-          <input type="password" id="loginPw" autocomplete="current-password">
-        </div>
-        <button class="auth-submit" id="loginSubmit">ログイン</button>
-        <div class="auth-error" id="loginError"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Change ID/password modal -->
-  <div class="modal-backdrop hidden" id="changeModal">
-    <div class="modal-box">
-      <h3>IDとパスワードを変更</h3>
-      <div class="field">
-        <label>現在のパスワード</label>
-        <input type="password" id="curPw">
-      </div>
-      <div class="field">
-        <label>新しいID</label>
-        <input type="text" id="newId">
-      </div>
-      <div class="field">
-        <label>新しいパスワード</label>
-        <input type="password" id="newPw">
-      </div>
-      <div class="field">
-        <label>新しいパスワード（確認）</label>
-        <input type="password" id="newPw2">
-      </div>
-      <div class="auth-error" id="changeError"></div>
-      <div class="add-form-actions" style="margin-top:12px;">
-        <button class="btn-ghost" id="changeCancelBtn">キャンセル</button>
-        <button class="btn-primary" id="changeSubmitBtn">変更する</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="wrap" id="appWrap" style="display:none;">
+  <div class="wrap" id="appWrap">
     <header>
       <div class="eyebrow">資産帳</div>
       <div class="total-label">総資産（円換算）</div>
@@ -410,11 +292,6 @@
 
     <footer class="foot-note">
       数値はこのブラウザにのみ保存されます／為替レートは参考値です
-      <span class="links">
-        <button class="link-btn" id="openChangeBtn">IDとパスワードを変更</button>
-        ｜
-        <button class="link-btn" id="logoutBtn">ログアウト</button>
-      </span>
     </footer>
   </div>
 
@@ -423,8 +300,6 @@
 <script>
 const STORAGE_KEY = 'accounts';
 const FX_KEY = 'fx_usd_jpy';
-const AUTH_KEY = 'auth_credentials';
-const SESSION_KEY = 'unlocked';
 const SNAPSHOT_KEY = 'monthly_snapshots';
 const LAST_CHECK_KEY = 'last_month_check';
 const CHART_COLORS = ['#1F3A54', '#C1443D', '#D9A441', '#1E7F5C', '#6B4E9A', '#3D8B9E', '#B5623F', '#5A6B8C'];
@@ -432,7 +307,7 @@ let accounts = [];
 let fxRate = null;
 let fxFetchedAt = null;
 let fxManual = false;
-const FALLBACK_RATE = 159.5; // 2026年8月時点の参考値。自動取得できない場合の初期値
+const FALLBACK_RATE = 159.5;
 
 const defaultAccounts = [
   { id: 'a1', institution: 'あおぞら銀行', product: '貯金', currency: 'JPY', amount: 0, note: '', updatedAt: null },
@@ -455,7 +330,6 @@ function toJpy(acc) {
   return Number(acc.amount) || 0;
 }
 
-/* ===== Monthly snapshots ===== */
 function ym(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
 function ymLabel(ymStr) {
   const [y, m] = ymStr.split('-');
@@ -483,7 +357,6 @@ function checkMonthBoundary() {
   const curYm = ym(now);
   const lastCheck = localStorage.getItem(LAST_CHECK_KEY);
   if (lastCheck && lastCheck !== curYm) {
-    // 月が変わってから初めて開いた: 前回チェック時点の月を「月末実績」として記録（未記録の場合のみ）
     const existing = getSnapshots().find(s => s.ym === lastCheck);
     if (!existing) recordSnapshot(lastCheck);
   }
@@ -500,7 +373,7 @@ function renderTrend() {
   }
   emptyNote.textContent = '';
   el.innerHTML = list.map((snap, i) => {
-    const prev = list[i + 1]; // list is newest-first, so i+1 is previous month
+    const prev = list[i + 1];
     let diffHtml = '<span class="trend-diff flat">ー</span>';
     if (prev) {
       const diff = snap.totalJpy - prev.totalJpy;
@@ -517,7 +390,6 @@ function renderTrend() {
   }).join('');
 }
 
-/* ===== Allocation donut chart ===== */
 function renderAllocation() {
   const svg = document.getElementById('donutSvg');
   const legend = document.getElementById('legendList');
@@ -573,7 +445,7 @@ async function loadAccounts() {
       fxFetchedAt = c.fetchedAt;
       fxManual = !!c.manual;
     }
-  } catch (e) { /* no cache yet */ }
+  } catch (e) {}
   checkMonthBoundary();
   render();
   fetchRate(true);
@@ -790,123 +662,8 @@ function clearAddForm() {
   document.getElementById('f_note').value = '';
 }
 
-/* ===== Auth ===== */
-async function sha256(text) {
-  const enc = new TextEncoder().encode(text);
-  const buf = await crypto.subtle.digest('SHA-256', enc);
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-function getAuth() {
-  try {
-    const raw = localStorage.getItem(AUTH_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) { return null; }
-}
-
-function initAuth() {
-  const overlay = document.getElementById('authOverlay');
-  const auth = getAuth();
-
-  if (sessionStorage.getItem(SESSION_KEY) === 'true' && auth) {
-    overlay.classList.add('hidden');
-    unlockApp();
-    return;
-  }
-
-  overlay.classList.remove('hidden');
-  if (auth) {
-    document.getElementById('setupForm').style.display = 'none';
-    document.getElementById('loginForm').style.display = 'block';
-  } else {
-    document.getElementById('setupForm').style.display = 'block';
-    document.getElementById('loginForm').style.display = 'none';
-  }
-}
-
-function unlockApp() {
-  document.getElementById('authOverlay').classList.add('hidden');
-  document.getElementById('appWrap').style.display = 'block';
-  sessionStorage.setItem(SESSION_KEY, 'true');
-  loadAccounts();
-}
-
-document.getElementById('setupSubmit').addEventListener('click', async () => {
-  const id = document.getElementById('setupId').value.trim();
-  const pw = document.getElementById('setupPw').value;
-  const pw2 = document.getElementById('setupPw2').value;
-  const err = document.getElementById('setupError');
-  if (!id || !pw) { err.textContent = 'IDとパスワードを入力してください'; return; }
-  if (pw !== pw2) { err.textContent = 'パスワードが一致しません'; return; }
-  if (pw.length < 4) { err.textContent = 'パスワードは4文字以上にしてください'; return; }
-  const hash = await sha256(pw);
-  localStorage.setItem(AUTH_KEY, JSON.stringify({ id, hash }));
-  err.textContent = '';
-  unlockApp();
-});
-
-document.getElementById('loginSubmit').addEventListener('click', async () => {
-  const id = document.getElementById('loginId').value.trim();
-  const pw = document.getElementById('loginPw').value;
-  const err = document.getElementById('loginError');
-  const auth = getAuth();
-  if (!auth) { err.textContent = '登録情報がありません'; return; }
-  const hash = await sha256(pw);
-  if (id === auth.id && hash === auth.hash) {
-    err.textContent = '';
-    unlockApp();
-  } else {
-    err.textContent = 'IDまたはパスワードが違います';
-  }
-});
-
-document.getElementById('logoutBtn').addEventListener('click', () => {
-  sessionStorage.removeItem(SESSION_KEY);
-  document.getElementById('appWrap').style.display = 'none';
-  document.getElementById('loginId').value = '';
-  document.getElementById('loginPw').value = '';
-  initAuth();
-});
-
-/* ===== Change credentials ===== */
-const changeModal = document.getElementById('changeModal');
-document.getElementById('openChangeBtn').addEventListener('click', () => {
-  changeModal.classList.remove('hidden');
-});
-document.getElementById('changeCancelBtn').addEventListener('click', () => {
-  changeModal.classList.add('hidden');
-  clearChangeForm();
-});
-document.getElementById('changeSubmitBtn').addEventListener('click', async () => {
-  const curPw = document.getElementById('curPw').value;
-  const newId = document.getElementById('newId').value.trim();
-  const newPw = document.getElementById('newPw').value;
-  const newPw2 = document.getElementById('newPw2').value;
-  const err = document.getElementById('changeError');
-  const auth = getAuth();
-  if (!auth) { err.textContent = '登録情報がありません'; return; }
-  const curHash = await sha256(curPw);
-  if (curHash !== auth.hash) { err.textContent = '現在のパスワードが違います'; return; }
-  if (!newId || !newPw) { err.textContent = '新しいIDとパスワードを入力してください'; return; }
-  if (newPw !== newPw2) { err.textContent = '新しいパスワードが一致しません'; return; }
-  if (newPw.length < 4) { err.textContent = 'パスワードは4文字以上にしてください'; return; }
-  const newHash = await sha256(newPw);
-  localStorage.setItem(AUTH_KEY, JSON.stringify({ id: newId, hash: newHash }));
-  err.textContent = '';
-  changeModal.classList.add('hidden');
-  clearChangeForm();
-  showToast();
-});
-
-function clearChangeForm() {
-  document.getElementById('curPw').value = '';
-  document.getElementById('newId').value = '';
-  document.getElementById('newPw').value = '';
-  document.getElementById('newPw2').value = '';
-  document.getElementById('changeError').textContent = '';
-}
-
-initAuth();
+// 起動時にログインなしですぐ口座データを読み込み
+loadAccounts();
 </script>
 </body>
 </html>
