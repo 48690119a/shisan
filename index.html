@@ -554,14 +554,16 @@
 
   function saveCloudData() {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(async () => {
-      if(!docRef) return;
-      const { setDoc } = window.firebaseModules;
-      try {
-        await setDoc(docRef, { accounts, snapshots, goalAmount }, { merge: true });
-        showToast();
-      } catch(e) { console.error("Save Error:", e); }
-    }, 800);
+    saveTimer = setTimeout(doSaveCloudData, 150);
+  }
+
+  async function doSaveCloudData() {
+    if(!docRef) return;
+    const { setDoc } = window.firebaseModules;
+    try {
+      await setDoc(docRef, { accounts, snapshots, goalAmount }, { merge: true });
+      showToast();
+    } catch(e) { console.error("Save Error:", e); }
   }
 
   function fmt(num) { return Number(num).toLocaleString('en-US'); }
@@ -972,6 +974,7 @@
   });
 
   const accountsListEl = document.getElementById('accountsList');
+  // 入力中(1文字ごと)は同期しない。ローカルの値とカンマ整形のみ更新する。
   accountsListEl.addEventListener('input', (e) => {
     const id = e.target.dataset.id;
     if (!id) return;
@@ -989,6 +992,19 @@
     } else if (e.target.classList.contains('update-note')) {
       acc.note = e.target.value;
     }
+  });
+
+  // 入力が完了してフィールドから離れたタイミング(フォーカスアウト)で初めて同期する
+  accountsListEl.addEventListener('focusout', (e) => {
+    const id = e.target.dataset.id;
+    if (!id) return;
+    const isEditableField =
+      e.target.classList.contains('update-inst') ||
+      e.target.classList.contains('update-prod') ||
+      e.target.classList.contains('update-amt') ||
+      e.target.classList.contains('update-prin') ||
+      e.target.classList.contains('update-note');
+    if (!isEditableField) return;
     saveCloudData();
   });
 
