@@ -45,8 +45,6 @@
     --down: #C1443D;
     --up-light: #4ADE80;
     --down-light: #F87171;
-    --gold: #D4AF37;
-    --gold-light: #FFDF00;
     --modal-bg: rgba(0,0,0,0.4);
   }
 
@@ -77,7 +75,6 @@
   }
 
   body { min-height: 100vh; padding-bottom: 60px; }
-
   .wrap { max-width: 480px; margin: 0 auto; padding: 0 16px; }
 
   header {
@@ -95,14 +92,21 @@
     background: radial-gradient(circle, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 70%);
   }
 
+  /* Stylish Theme Toggle */
   .theme-toggle {
-    position: absolute; top: 18px; right: 20px;
-    background: rgba(255,255,255,0.2); border: none; border-radius: 50%;
-    width: 32px; height: 32px; font-size: 16px; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; z-index: 2;
-    transition: background 0.2s;
+    position: absolute; top: 16px; right: 16px; z-index: 2;
+    background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 24px; padding: 6px 10px; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    color: #FFFFFF; font-family: inherit; font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.03em; transition: background 0.2s, border-color 0.2s;
+    backdrop-filter: blur(4px);
   }
-  .theme-toggle:active { background: rgba(255,255,255,0.3); }
+  .theme-toggle:hover { background: rgba(0,0,0,0.25); }
+  body.dark-theme .theme-toggle { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+  .theme-icon { width: 14px; height: 14px; flex: none; }
+  body:not(.dark-theme) .icon-moon { display: none; }
+  body.dark-theme .icon-sun { display: none; }
 
   .eyebrow { font-size: 12px; letter-spacing: 0.04em; color: rgba(255,255,255,0.7); font-weight: 500; position: relative; }
   
@@ -137,7 +141,7 @@
   body.dark-theme .total-profit.plus .val { text-shadow: 0 0 6px rgba(74,222,128,0.5); }
   .total-profit.minus .val { color: var(--down-light); }
 
-  /* Goal Progress Bar */
+  /* Goal Progress Bar with Color Stages */
   .goal-wrap {
     margin-top: 16px; position: relative; cursor: pointer;
     background: rgba(0,0,0,0.15); padding: 10px 12px; border-radius: 12px;
@@ -146,8 +150,12 @@
   .goal-label { font-size: 11px; color: rgba(255,255,255,0.8); display: flex; justify-content: space-between; margin-bottom: 6px; }
   .goal-label span { font-weight: 700; color: #FFF; }
   .progress-track { width: 100%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; }
-  .progress-fill { height: 100%; width: 0%; background: var(--up-light); transition: width 0.5s ease, background 0.3s; }
-  .progress-fill.gold { background: linear-gradient(90deg, var(--gold), var(--gold-light)); box-shadow: 0 0 8px rgba(255,223,0,0.6); }
+  
+  .progress-fill { height: 100%; width: 0%; transition: width 0.5s ease, background 0.3s, box-shadow 0.3s; }
+  .progress-fill.red { background: #F87171; box-shadow: 0 0 8px rgba(248,113,113,0.4); }
+  .progress-fill.orange { background: #FB923C; box-shadow: 0 0 8px rgba(251,146,60,0.4); }
+  .progress-fill.yellow { background: #FBBF24; box-shadow: 0 0 8px rgba(251,191,36,0.4); }
+  .progress-fill.green { background: #4ADE80; box-shadow: 0 0 8px rgba(74,222,128,0.4); }
 
   .fx-bar {
     margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.16);
@@ -187,9 +195,18 @@
     display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
   }
   .card-heading { flex: 1; min-width: 0; }
-  .inst-name { font-size: 14.5px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+  .inst-name { font-size: 14.5px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .currency-tag { font-size: 9.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.03em; }
-  .product-name { font-size: 11.5px; color: var(--ink-soft); margin-top: 1px; }
+  
+  /* Category Select on Card */
+  .cat-select {
+    font-size: 10px; font-weight: 500; font-family: 'Zen Kaku Gothic New', sans-serif;
+    background: var(--surface-soft); color: var(--ink-soft);
+    border: 1px solid var(--border); border-radius: 6px; padding: 2px 4px;
+    margin-top: 4px; outline: none; cursor: pointer; width: fit-content;
+  }
+  .cat-select:focus { border-color: var(--accent); color: var(--ink); }
+
   .remove-btn { flex: none; border: none; background: none; color: var(--ink-faint); font-size: 18px; padding: 4px 6px; cursor: pointer; }
   .remove-btn:hover { color: var(--down); }
 
@@ -210,8 +227,6 @@
   }
   .jpy-equiv .val { font-weight: 700; font-size: 15px; color: var(--accent); font-variant-numeric: tabular-nums; }
   body.dark-theme .up-text { color: var(--up); text-shadow: 0 0 6px rgba(74,222,128,0.3); }
-
-  .row-note { margin-top: 10px; font-size: 10.5px; color: var(--ink-faint); display: flex; justify-content: space-between; }
 
   .add-btn {
     width: 100%; padding: 13px; margin-top: 10px; border-radius: 12px; border: none;
@@ -283,501 +298,612 @@
 
   <div class="wrap" id="appWrap">
     <header>
-      <button class="theme-toggle" id="themeToggle">🌙</button>
-      <div class="eyebrow">資産帳</div>
+      <button class="theme-toggle" id="themeToggle">
+        <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+        <span id="themeLabel">Light Mode</span>
+      </button>
+
+      <div class="eyebrow">Yana's 資産帳</div>
       <div class="total-label">
-        総資産（円換算・時価ベース）
-        <span id="momBadge" class="mom-badge"></span>
+        総資産額
+        <span class="mom-badge" id="momBadge"></span>
       </div>
-      <div class="total-amount" id="totalAmount"><span class="yen">¥</span>0</div>
+      <div class="total-amount"><span class="yen">¥</span><span id="totalJpy">0</span></div>
       
-      <div class="total-profit" id="totalProfit">
-        <span class="label">投資損益</span><span class="val"></span>
+      <div class="total-profit" id="totalProfitBox">
+        <span class="label">総損益</span>
+        <span class="val" id="totalProfitVal">0</span>
       </div>
 
       <div class="goal-wrap" id="goalWrap">
         <div class="goal-label">
-          <span>🎯 目標 <span id="goalTextVal">10,000,000</span>円</span>
-          <span>あと <span id="goalRemainVal">0</span>円</span>
+          <span>目標 1億円</span>
+          <span id="goalPct">0%</span>
         </div>
-        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="progress-track">
+          <div class="progress-fill" id="goalFill"></div>
+        </div>
       </div>
 
       <div class="fx-bar">
-        <span>1USD＝</span>
-        <input type="number" step="0.01" id="fxRateInput" class="fx-rate-input" value="">
-        <span>円</span>
-        <button class="fx-refresh" id="fxRefreshBtn">自動取得</button>
+        <span>USD/JPY</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input type="number" id="usdRate" class="fx-rate-input" value="150" step="0.1">
+          <button class="fx-refresh" id="fxRefresh">更新</button>
+        </div>
       </div>
-      <div class="fx-note" id="fxNote"></div>
+      <div class="fx-note" id="fxNote">手動更新</div>
     </header>
 
-    <div id="accountGroups"></div>
+    <div class="section-label"><span class="txt">保有資産</span></div>
+    <div id="accountsList"></div>
 
-    <button class="add-btn" id="showAddBtn">＋ 口座を追加する</button>
-
+    <button class="add-btn" id="addBtn">＋ 口座を追加</button>
     <div class="add-form" id="addForm">
-      <div class="field full">
-        <label>カテゴリ</label>
-        <select id="f_category">
-          <option value="cash">現金・預金</option>
+      <div class="field">
+        <label>大カテゴリ</label>
+        <select id="newCat">
+          <option value="cash">現金</option>
           <option value="invest">株式・投資信託</option>
-          <option value="insurance">拘束資産（保険など）</option>
+          <option value="insurance">保険等</option>
+          <option value="crypto">仮想通貨</option>
         </select>
       </div>
-      <div class="field full">
+      <div class="field">
         <label>金融機関</label>
-        <input type="text" id="f_inst" placeholder="例：楽天証券">
+        <input type="text" id="newInst" placeholder="例: SBI証券">
       </div>
-      <div class="field full">
-        <label>商品名</label>
-        <input type="text" id="f_product" placeholder="例：株式・投信">
+      <div class="field">
+        <label>商品名 / 銘柄</label>
+        <input type="text" id="newProd" placeholder="例: オルカン">
       </div>
       <div class="field">
         <label>通貨</label>
-        <select id="f_currency">
-          <option value="JPY">円（JPY）</option>
-          <option value="USD">ドル（USD）</option>
+        <select id="newCurr">
+          <option value="JPY">円 (JPY)</option>
+          <option value="USD">米ドル (USD)</option>
         </select>
       </div>
       <div class="field">
-        <label>金額（時価）</label>
-        <input type="text" inputmode="decimal" id="f_amount" class="amount" placeholder="0">
+        <label>現在評価額</label>
+        <input type="number" id="newAmt" placeholder="0" class="amount" step="any">
+      </div>
+      <div class="field">
+        <label>元本 (任意)</label>
+        <input type="number" id="newPrin" placeholder="0" step="any">
+      </div>
+      <div class="field full">
+        <label>メモ (任意)</label>
+        <input type="text" id="newNote" placeholder="積立状況など">
       </div>
       <div class="add-form-actions">
         <button class="btn-ghost" id="cancelAddBtn">キャンセル</button>
-        <button class="btn-primary" id="confirmAddBtn">追加する</button>
+        <button class="btn-primary" id="saveAddBtn">追加する</button>
       </div>
     </div>
 
-    <div class="section-label"><span class="txt">資産配分</span></div>
-    <div class="card" id="allocationCard">
-      <div class="donut-wrap"><svg viewBox="0 0 120 120" class="donut-svg" id="donutSvg"></svg><div class="donut-center" id="donutCenter"></div></div>
-      <div class="legend" id="legendList"></div>
+    <div class="section-label"><span class="txt">ポートフォリオ</span></div>
+    <div class="card" style="padding:24px 16px;">
+      <div class="donut-wrap">
+        <svg class="donut-svg" viewBox="0 0 32 32" id="donutSvg"></svg>
+        <div class="donut-center"><div>合計</div><div id="donutTotal">0</div></div>
+      </div>
+      <div class="legend" id="donutLegend"></div>
     </div>
 
-    <div class="section-label"><span class="txt">月次推移</span></div>
-    <div class="card">
-      <p style="font-size:11.5px;color:var(--ink-soft);margin-bottom:8px;">月末時点の総資産を記録します</p>
-      <button class="add-btn" id="openSnapBtn" style="margin-top:0;margin-bottom:16px;">＋ 今月分を記録する</button>
+    <div class="section-label" style="justify-content:space-between; margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="width:6px;height:6px;border-radius:50%;background:var(--accent);"></div>
+        <span class="txt">資産推移 (月次スナップショット)</span>
+      </div>
+      <button class="fx-refresh" id="takeSnapshotBtn" style="background:var(--accent-soft);color:var(--accent);font-weight:700;padding:4px 10px;">当月を記録</button>
+    </div>
+    <div class="card" style="padding:10px 16px;">
       <div id="trendList"></div>
     </div>
 
-    <footer class="foot-note">数値はFirestoreに同期されます</footer>
+    <footer class="foot-note">Data sync enabled.</footer>
   </div>
 
-  <!-- Snapshot Modal -->
   <div class="modal-overlay" id="snapModal">
     <div class="modal-content">
-      <h3>月次スナップショット記録</h3>
+      <h3 id="snapModalTitle">当月の資産を記録</h3>
       <div class="snap-stat">
-        <span>前回記録 (<span id="snapPrevYm">--</span>)</span>
-        <span class="val">¥<span id="snapPrevVal">0</span></span>
+        <span>前回記録額</span>
+        <span class="val" id="snapPrevVal">¥0</span>
+      </div>
+      <div class="snap-stat">
+        <span>現在の計算額 (円換算)</span>
+        <span class="val" id="snapCalcVal">¥0</span>
       </div>
       <div class="snap-input-wrap">
-        <label>今回記録する総資産額（合算値が初期入力されています）</label>
-        <input type="text" inputmode="numeric" id="snapInputVal">
+        <label>確定する総資産額 (修正可能)</label>
+        <input type="number" id="snapInputVal" step="1">
       </div>
-      <div class="snap-diff" id="snapDiffText">差分: --</div>
+      <div class="snap-diff" id="snapDiff"></div>
       <div class="modal-actions">
-        <button class="btn-ghost" id="closeSnapBtn">キャンセル</button>
-        <button class="btn-primary" id="saveSnapBtn">この金額で記録</button>
+        <button class="btn-ghost" id="snapCancelBtn">キャンセル</button>
+        <button class="btn-primary" id="snapSaveBtn">記録する</button>
       </div>
     </div>
   </div>
 
-  <div class="save-toast" id="saveToast">保存しました</div>
+  <div class="save-toast" id="toast">同期しました</div>
 
 <script>
-const FX_KEY = 'fx_usd_jpy';
-const CHART_COLORS = ['#1F3A54', '#C1443D', '#D9A441', '#1E7F5C', '#6B4E9A', '#3D8B9E', '#B5623F', '#5A6B8C'];
-const FALLBACK_RATE = 159.5;
+  let db, docRef;
+  const USD_RATE_KEY = 'shisan_usd_rate';
+  const USD_DATE_KEY = 'shisan_usd_date';
+  
+  let usdRate = parseFloat(localStorage.getItem(USD_RATE_KEY)) || 150;
+  let rateDate = localStorage.getItem(USD_DATE_KEY) || '';
 
-let accounts = [];
-let snapshots = [];
-let fxRate = null;
-let fxFetchedAt = null;
-let fxManual = false;
-let goalAmount = Number(localStorage.getItem('shisan_goal')) || 10000000;
-let lastSnapAmountForModal = 0;
+  // 大カテゴリの定義
+  const catLabels = { cash: '現金', invest: '株式・投資信託', insurance: '保険等', crypto: '仮想通貨' };
+  const catColors = { cash: '#60A5FA', invest: '#34D399', insurance: '#FBBF24', crypto: '#C084FC', other: '#A1A1AA' };
 
-const defaultAccounts = [
-  { id: 'a1', category: 'cash', institution: 'あおぞら銀行', product: '貯金', currency: 'JPY', amount: 0, principal: 0, note: '' },
-  { id: 'a3', category: 'invest', institution: '楽天証券', product: '株式・投信', currency: 'JPY', amount: 0, principal: 0, note: '' },
-  { id: 'a2', category: 'insurance', institution: '明治安田生命', product: '個人年金', currency: 'JPY', amount: 0, principal: 0, note: '' },
-];
+  // デフォルトデータ（カテゴリ調整済み）
+  const defaultAccounts = [
+    { id: 'a1', category: 'cash', institution: 'あおぞら銀行', product: '貯金', currency: 'JPY', amount: 0, principal: 0, note: '' },
+    { id: 'a2', category: 'insurance', institution: '明治安田生命', product: '個人年金', currency: 'JPY', amount: 0, principal: 0, note: '' },
+    { id: 'a3', category: 'invest', institution: '楽天証券', product: '株式・投信', currency: 'JPY', amount: 0, principal: 0, note: '' },
+    { id: 'a4', category: 'insurance', institution: 'プルデンシャル', product: 'リタイアメントインカム', currency: 'USD', amount: 0, principal: 0, note: '' },
+  ];
 
-const catLabels = { cash: '現金・預金', invest: '株式・投資信託', insurance: '拘束資産（保険など）' };
+  let accounts = [];
+  let snapshots = [];
+  let saveTimer = null;
+  let isDark = localStorage.getItem('shisan_theme') === 'dark';
+  applyTheme();
 
-/* Theme Setup */
-const themeBtn = document.getElementById('themeToggle');
-let isDark = localStorage.getItem('shisan_theme') === 'dark';
-if(isDark) document.body.classList.add('dark-theme');
-themeBtn.textContent = isDark ? '🌞' : '🌙';
-themeBtn.onclick = () => {
-  isDark = !isDark;
-  document.body.classList.toggle('dark-theme', isDark);
-  localStorage.setItem('shisan_theme', isDark ? 'dark' : 'light');
-  themeBtn.textContent = isDark ? '🌞' : '🌙';
-};
+  document.getElementById('usdRate').value = usdRate;
+  if(rateDate) document.getElementById('fxNote').innerText = `${rateDate} 取得`;
 
-/* Goal Setup */
-document.getElementById('goalWrap').onclick = () => {
-  const ans = prompt('目標金額（円）を入力してください（半角数字）', goalAmount);
-  if(ans && !isNaN(ans.replace(/,/g, ''))) {
-    goalAmount = Number(ans.replace(/,/g, ''));
-    localStorage.setItem('shisan_goal', goalAmount);
-    render();
-  }
-};
+  window.addEventListener('firebase-ready', () => {
+    db = window.db;
+    const { doc, getDoc, setDoc, onSnapshot } = window.firebaseModules;
+    docRef = doc(db, 'users', 'yana');
+    initFirestore();
+  });
 
-function fmtNum(n) { return Number(n).toLocaleString('ja-JP', { maximumFractionDigits: 0 }); }
-function toJpy(acc) { return acc.currency === 'USD' ? (Number(acc.amount)||0) * (fxRate||0) : (Number(acc.amount)||0); }
-function ym(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
-function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
-function hankoChar(name) { return name ? name.charAt(0) : '？'; }
-
-async function saveCloudData() {
-  if (!window.db) return;
-  try {
-    await window.firebaseModules.setDoc(window.firebaseModules.doc(window.db, "shisan", "data"), { accounts, snapshots, updatedAt: new Date().toISOString() });
-    showToast();
-  } catch (e) { console.error(e); }
-}
-
-async function initFirestore() {
-  if (!window.db) return;
-  const docRef = window.firebaseModules.doc(window.db, "shisan", "data");
-  try {
-    const snap = await window.firebaseModules.getDoc(docRef);
-    if (!snap.exists()) { accounts = defaultAccounts; await saveCloudData(); }
-  } catch (e) {}
-
-  window.firebaseModules.onSnapshot(docRef, (docSnap) => {
-    if (docSnap.exists()) {
-      const d = docSnap.data();
-      if (d.accounts) accounts = d.accounts;
-      if (d.snapshots) snapshots = d.snapshots;
-      
-      // Data migration for category
-      accounts.forEach(a => {
-        if(!a.category) {
-          if(a.institution.includes('証券') || a.product.includes('投信')) a.category = 'invest';
-          else if(a.institution.includes('保険') || a.institution.includes('生命')) a.category = 'insurance';
-          else a.category = 'cash';
+  async function initFirestore() {
+    const { getDoc, setDoc, onSnapshot } = window.firebaseModules;
+    try {
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        accounts = data.accounts || [];
+        snapshots = data.snapshots || [];
+      } else {
+        accounts = JSON.parse(JSON.stringify(defaultAccounts));
+        snapshots = [];
+        await setDoc(docRef, { accounts, snapshots });
+      }
+      render();
+      onSnapshot(docRef, (docSnap) => {
+        if(docSnap.exists()){
+          const d = docSnap.data();
+          accounts = d.accounts || [];
+          snapshots = d.snapshots || [];
+          render();
         }
       });
+    } catch(e) {
+      console.error("Firestore Init Error:", e);
+      document.getElementById('appWrap').innerHTML = `<p style="padding:20px;">データベース接続エラー。リロードしてください。</p>`;
+    }
+  }
+
+  function saveCloudData() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+      if(!docRef) return;
+      const { setDoc } = window.firebaseModules;
+      try {
+        await setDoc(docRef, { accounts, snapshots }, { merge: true });
+        showToast();
+      } catch(e) { console.error("Save Error:", e); }
+    }, 800);
+  }
+
+  function fmt(num) { return Number(num).toLocaleString('en-US'); }
+  function calcJpy(amt, curr) { return curr === 'USD' ? amt * usdRate : amt; }
+  
+  function updateFxRateLocally() {
+    const val = parseFloat(document.getElementById('usdRate').value);
+    if(val > 0) {
+      usdRate = val;
+      const d = new Date();
+      rateDate = `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+      localStorage.setItem(USD_RATE_KEY, usdRate);
+      localStorage.setItem(USD_DATE_KEY, rateDate);
+      document.getElementById('fxNote').innerText = `${rateDate} 取得`;
       render();
     }
-  });
-}
-
-function showToast() {
-  const t = document.getElementById('saveToast');
-  t.classList.add('show');
-  clearTimeout(showToast._timer);
-  showToast._timer = setTimeout(() => t.classList.remove('show'), 1600);
-}
-
-function render() {
-  let totalAmount = 0;
-  let totalPl = 0;
-  let totalPrin = 0;
-
-  // Group accounts
-  const groups = { cash: [], invest: [], insurance: [] };
-  accounts.forEach(a => {
-    groups[a.category] = groups[a.category] || [];
-    groups[a.category].push(a);
-    
-    const jpyCurrent = toJpy(a);
-    totalAmount += jpyCurrent;
-    
-    if(a.category === 'invest' && a.principal > 0) {
-      const prin = a.currency === 'USD' ? a.principal * (fxRate||1) : a.principal;
-      totalPl += (jpyCurrent - prin);
-      totalPrin += prin;
-    }
-  });
-
-  // Header Total
-  document.getElementById('totalAmount').innerHTML = `<span class="yen">¥</span>${fmtNum(totalAmount)}`;
-  
-  // Goal Bar
-  document.getElementById('goalTextVal').textContent = fmtNum(goalAmount);
-  const remain = Math.max(0, goalAmount - totalAmount);
-  document.getElementById('goalRemainVal').textContent = fmtNum(remain);
-  let pct = (totalAmount / goalAmount) * 100;
-  if(pct > 100) pct = 100;
-  const fill = document.getElementById('progressFill');
-  fill.style.width = pct + '%';
-  fill.className = pct >= 90 ? 'progress-fill gold' : 'progress-fill';
-
-  // MoM Badge
-  const badge = document.getElementById('momBadge');
-  const sortedSnaps = snapshots.slice().sort((a,b) => a.ym.localeCompare(b.ym));
-  if (sortedSnaps.length > 0) {
-    const lastSnap = sortedSnaps[sortedSnaps.length - 1];
-    const diff = totalAmount - lastSnap.totalJpy;
-    if (diff !== 0) {
-      const sign = diff > 0 ? '+' : '';
-      const diffPct = lastSnap.totalJpy > 0 ? (diff / lastSnap.totalJpy * 100) : 0;
-      badge.textContent = `${sign}¥${fmtNum(diff)} (${sign}${diffPct.toFixed(1)}%)`;
-      badge.className = `mom-badge show ${diff > 0 ? 'plus' : 'minus'}`;
-    } else {
-      badge.className = 'mom-badge';
-    }
-  } else {
-    badge.className = 'mom-badge';
   }
 
-  // Investment Profit
-  const pEl = document.getElementById('totalProfit');
-  if (totalPrin > 0) {
-    const s = totalPl >= 0 ? '+' : '';
-    pEl.className = `total-profit show ${totalPl >= 0 ? 'plus' : 'minus'}`;
-    pEl.querySelector('.val').textContent = `${s}¥${fmtNum(totalPl)} (${s}${(totalPl/totalPrin*100).toFixed(1)}%)`;
-  } else {
-    pEl.className = 'total-profit';
+  async function fetchFx() {
+    try {
+      document.getElementById('fxRefresh').innerText = '...';
+      const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+      const data = await res.json();
+      if(data && data.rates && data.rates.JPY) {
+        document.getElementById('usdRate').value = data.rates.JPY;
+        updateFxRateLocally();
+      }
+    } catch(e) { alert('為替取得失敗'); }
+    document.getElementById('fxRefresh').innerText = '更新';
   }
 
-  // Render Groups (Accordions)
-  let html = '';
-  Object.keys(catLabels).forEach((catKey, idx) => {
-    const list = groups[catKey];
-    if(!list || list.length === 0) return;
-    const catTotal = list.reduce((sum, a) => sum + toJpy(a), 0);
-    
-    // Auto-open first group or if it has items. Using details.
-    html += `
-      <details class="category-group" open>
-        <summary>
-          <span>${catLabels[catKey]}</span>
-          <span class="cat-total">¥${fmtNum(catTotal)}</span>
-        </summary>
-        <div class="cat-cards">
+  function toggleTheme() {
+    isDark = !isDark;
+    localStorage.setItem('shisan_theme', isDark ? 'dark' : 'light');
+    applyTheme();
+    renderChart();
+  }
+  function applyTheme() {
+    document.body.className = isDark ? 'dark-theme' : '';
+    document.getElementById('themeLabel').textContent = isDark ? 'Dark Mode' : 'Light Mode';
+  }
+
+  function showToast() {
+    const t = document.getElementById('toast');
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  function getHanko(str) { return str ? str.substring(0,1) : '資'; }
+
+  function createCardHtml(acc) {
+    const cJpy = calcJpy(acc.amount, acc.currency);
+    const pJpy = calcJpy(acc.principal, acc.currency);
+    let jpyHtml = '';
+    let profitHtml = '';
+
+    if (acc.currency === 'USD') {
+      jpyHtml = `<div class="jpy-equiv"><span>円換算:</span><span class="val">¥${fmt(Math.round(cJpy))}</span></div>`;
+    }
+
+    if (acc.principal > 0) {
+      const diff = cJpy - pJpy;
+      const diffPct = (diff / pJpy) * 100;
+      let diffStr = diff > 0 ? `+¥${fmt(Math.round(diff))}` : `-¥${fmt(Math.round(Math.abs(diff)))}`;
+      let colorCls = diff > 0 ? 'up-text' : (diff < 0 ? 'down-text' : '');
+      let pctStr = diff > 0 ? `(+${diffPct.toFixed(1)}%)` : `(${diffPct.toFixed(1)}%)`;
+      profitHtml = `<div class="jpy-equiv" style="padding-top:0;"><span>評価損益:</span><span class="val ${colorCls}">${diffStr} <span style="font-size:10px;font-weight:400;">${pctStr}</span></span></div>`;
+    }
+
+    return `
+      <div class="card" data-id="${acc.id}">
+        <div class="card-top">
+          <div class="hanko" style="background:${catColors[acc.category] || catColors.other}">${getHanko(acc.institution)}</div>
+          <div class="card-heading">
+            <div class="inst-name">${acc.institution} <span class="currency-tag">${acc.currency}</span></div>
+            <div style="font-size:11px; color:var(--ink-soft); margin-top:2px;">${acc.product}</div>
+            <select class="cat-select" data-id="${acc.id}">
+              <option value="cash" ${acc.category === 'cash' ? 'selected' : ''}>現金</option>
+              <option value="invest" ${acc.category === 'invest' ? 'selected' : ''}>株式・投資信託</option>
+              <option value="insurance" ${acc.category === 'insurance' ? 'selected' : ''}>保険等</option>
+              <option value="crypto" ${acc.category === 'crypto' ? 'selected' : ''}>仮想通貨</option>
+            </select>
+          </div>
+          <button class="remove-btn" data-id="${acc.id}">×</button>
+        </div>
+        <div class="card-body">
+          <div class="field">
+            <label>評価額 (${acc.currency})</label>
+            <input type="number" class="amount update-amt" data-id="${acc.id}" value="${acc.amount}" step="any">
+          </div>
+          <div class="field">
+            <label>元本 (${acc.currency})</label>
+            <input type="number" class="update-prin" data-id="${acc.id}" value="${acc.principal || 0}" step="any">
+          </div>
+          <div class="field full">
+            <label>メモ</label>
+            <input type="text" class="update-note" data-id="${acc.id}" value="${acc.note || ''}">
+          </div>
+          ${jpyHtml}
+          ${profitHtml}
+        </div>
+      </div>
     `;
-    list.forEach((acc, i) => html += createCardHtml(acc, idx * 3 + i, catKey === 'invest'));
-    html += `</div></details>`;
-  });
-  document.getElementById('accountGroups').innerHTML = html;
-
-  bindCardEvents();
-  renderTrend();
-  renderAllocation();
-
-  // FX Input
-  const fI = document.getElementById('fxRateInput');
-  if (fI && document.activeElement !== fI) fI.value = fxRate || '';
-}
-
-function createCardHtml(acc, cIdx, isInvest) {
-  const isUsd = acc.currency === 'USD';
-  const tagC = CHART_COLORS[cIdx % CHART_COLORS.length];
-  const prin = Number(acc.principal) || 0;
-  const curr = Number(acc.amount) || 0;
-  const pl = curr - prin;
-  
-  return `
-    <div class="card">
-      <div class="card-top">
-        <div class="hanko" style="background:${tagC}">${hankoChar(acc.institution)}</div>
-        <div class="card-heading">
-          <div class="inst-name">${escapeHtml(acc.institution)} ${isUsd ? '<span class="currency-tag">USD</span>' : ''}</div>
-          <div class="product-name">${escapeHtml(acc.product)}</div>
-        </div>
-        <button class="remove-btn" data-id="${acc.id}">×</button>
-      </div>
-      <div class="card-body">
-        <div class="field ${isInvest ? '' : 'full'}">
-          <label>${isInvest ? '評価額（時価）' : '金額'}（${isUsd ? 'US$' : '円'}）</label>
-          <input type="text" class="amount-input amount" data-id="${acc.id}" value="${curr ? curr.toLocaleString('ja-JP') : ''}" placeholder="0">
-        </div>
-        ${isInvest ? `
-        <div class="field">
-          <label>投資元本</label>
-          <input type="text" class="prin-input" data-id="${acc.id}" value="${prin ? prin.toLocaleString('ja-JP') : ''}" placeholder="0">
-        </div>
-        ` : ''}
-        ${isInvest && prin > 0 ? `
-        <div class="jpy-equiv" style="background:${pl>=0?'rgba(74,222,128,0.1)':'rgba(248,113,113,0.1)'};">
-          <span>含み損益</span>
-          <span class="val ${pl>=0?'up-text':''}" style="color:${pl>=0?'var(--up)':'var(--down)'}">${pl>=0?'+':''}¥${fmtNum(pl)}</span>
-        </div>` : ''}
-        ${isUsd ? `<div class="jpy-equiv"><span>円換算（時価）</span><span class="val">¥${fmtNum(toJpy(acc))}</span></div>` : ''}
-      </div>
-    </div>
-  `;
-}
-
-function bindCardEvents() {
-  document.querySelectorAll('.amount-input, .prin-input').forEach(el => {
-    el.addEventListener('focus', e => {
-      const raw = String(e.target.value).replace(/,/g, '');
-      e.target.value = raw !== '0' ? raw : '';
-    });
-    el.addEventListener('blur', e => {
-      const acc = accounts.find(a => a.id === e.target.dataset.id);
-      if(!acc) return;
-      const val = Number(String(e.target.value).replace(/,/g, '')) || 0;
-      if(e.target.classList.contains('amount-input')) acc.amount = val;
-      else acc.principal = val;
-      saveCloudData(); render();
-    });
-  });
-  document.querySelectorAll('.remove-btn').forEach(btn => {
-    btn.onclick = e => {
-      accounts = accounts.filter(a => a.id !== e.target.dataset.id);
-      saveCloudData(); render();
-    };
-  });
-}
-
-/* Add Form */
-const aForm = document.getElementById('addForm');
-document.getElementById('showAddBtn').onclick = () => aForm.classList.add('open');
-document.getElementById('cancelAddBtn').onclick = () => aForm.classList.remove('open');
-document.getElementById('confirmAddBtn').onclick = () => {
-  const i = document.getElementById('f_inst').value.trim();
-  const a = Number(String(document.getElementById('f_amount').value).replace(/,/g, '')) || 0;
-  if(!i) return;
-  accounts.push({
-    id: 'a'+Date.now(), category: document.getElementById('f_category').value,
-    institution: i, product: document.getElementById('f_product').value || '未分類',
-    currency: document.getElementById('f_currency').value, amount: a, principal: 0
-  });
-  saveCloudData(); render();
-  aForm.classList.remove('open');
-  document.querySelectorAll('#addForm input').forEach(inp => inp.value = '');
-};
-
-/* FX */
-async function fetchRate() {
-  try {
-    const res = await fetch('https://open.er-api.com/v6/latest/USD');
-    const data = await res.json();
-    fxRate = data.rates.JPY; fxFetchedAt = new Date().toISOString(); fxManual = false;
-    localStorage.setItem(FX_KEY, JSON.stringify({ rate: fxRate, at: fxFetchedAt, m: false }));
-    document.getElementById('fxNote').textContent = '自動取得成功';
-  } catch(e) {
-    if(!fxRate) { fxRate = FALLBACK_RATE; fxManual = true; }
-    document.getElementById('fxNote').textContent = '取得失敗';
   }
-  render();
-}
-document.getElementById('fxRefreshBtn').onclick = fetchRate;
-document.getElementById('fxRateInput').onchange = e => {
-  if(Number(e.target.value)>0) {
-    fxRate = Number(e.target.value); fxManual = true; render();
-    localStorage.setItem(FX_KEY, JSON.stringify({ rate: fxRate, m: true }));
-    document.getElementById('fxNote').textContent = '手動設定';
-  }
-};
 
-/* Charts */
-function renderAllocation() {
-  const svg = document.getElementById('donutSvg'), leg = document.getElementById('legendList');
-  const values = accounts.map(a => Math.max(0, toJpy(a)));
-  const total = values.reduce((s, v) => s + v, 0);
-  if (total <= 0) { svg.innerHTML = ''; leg.innerHTML = ''; return; }
-  
-  let off = 0, segs = '', lh = '';
-  const circ = 2 * Math.PI * 50;
-  accounts.forEach((a, i) => {
-    const v = Math.max(0, toJpy(a)); if(v<=0) return;
-    const c = CHART_COLORS[i % CHART_COLORS.length];
-    const d = (v/total) * circ;
-    segs += `<circle cx="60" cy="60" r="50" fill="none" stroke="${c}" stroke-width="16" stroke-dasharray="${d} ${circ-d}" stroke-dashoffset="${-off}" />`;
-    off += d;
-    lh += `<div class="legend-row"><span class="legend-dot" style="background:${c}"></span><span class="legend-name">${escapeHtml(a.institution)}</span><span class="legend-pct">${(v/total*100).toFixed(1)}%</span></div>`;
-  });
-  svg.innerHTML = segs; leg.innerHTML = lh;
-  document.getElementById('donutCenter').innerHTML = `<div>総資産</div><div>¥${fmtNum(total)}</div>`;
-}
+  function render() {
+    let total = 0;
+    let totalPrincipal = 0;
+    
+    // カテゴリごとの集計
+    const grouped = { cash: [], invest: [], insurance: [], crypto: [] };
+    
+    accounts.forEach(a => {
+      const jpy = calcJpy(a.amount, a.currency);
+      const prinJpy = calcJpy(a.principal, a.currency);
+      total += jpy;
+      totalPrincipal += prinJpy;
+      if (grouped[a.category]) grouped[a.category].push(a);
+      else grouped.cash.push(a); // failsafe
+    });
 
-function renderTrend() {
-  const el = document.getElementById('trendList');
-  const list = snapshots.slice().sort((a,b) => b.ym.localeCompare(a.ym));
-  el.innerHTML = list.map((s, i) => {
-    const p = list[i+1];
-    let dH = '<span class="trend-diff">ー</span>';
-    if(p) {
-      const d = s.totalJpy - p.totalJpy, pct = p.totalJpy ? (d/p.totalJpy*100):0;
-      dH = `<span class="trend-diff ${d>0?'up':(d<0?'down':'')}">${d>0?'+':''}¥${fmtNum(d)} (${d>0?'+':''}${pct.toFixed(1)}%)</span>`;
+    document.getElementById('totalJpy').innerText = fmt(Math.round(total));
+    
+    // 総損益の計算
+    const profitBox = document.getElementById('totalProfitBox');
+    const profitVal = document.getElementById('totalProfitVal');
+    if (totalPrincipal > 0) {
+      const tDiff = total - totalPrincipal;
+      const tPct = (tDiff / totalPrincipal) * 100;
+      profitBox.classList.add('show');
+      profitBox.className = `total-profit show ${tDiff >= 0 ? 'plus' : 'minus'}`;
+      profitVal.innerText = `${tDiff >= 0 ? '+' : '-'}¥${fmt(Math.round(Math.abs(tDiff)))} (${tDiff >= 0 ? '+' : ''}${tPct.toFixed(1)}%)`;
+    } else {
+      profitBox.classList.remove('show');
     }
-    return `<div class="trend-row"><span class="trend-month">${s.ym.replace('-','/')}</span><span class="trend-amount">¥${fmtNum(s.totalJpy)}</span>${dH}</div>`;
-  }).join('');
-}
 
-/* Snapshot Modal (UX Optimization) */
-const snapModal = document.getElementById('snapModal');
-const snapInput = document.getElementById('snapInputVal');
-const snapDiffTxt = document.getElementById('snapDiffText');
+    // 目標 1億円 プログレス (色の変更処理)
+    const goal = 100000000;
+    let pct = (total / goal) * 100;
+    if(pct > 100) pct = 100;
+    
+    document.getElementById('goalPct').innerText = `${pct.toFixed(1)}%`;
+    const fill = document.getElementById('goalFill');
+    fill.style.width = `${pct}%`;
 
-document.getElementById('openSnapBtn').onclick = () => {
-  const currentTotal = accounts.reduce((s, a) => s + toJpy(a), 0);
-  const sortedSnaps = snapshots.slice().sort((a,b) => a.ym.localeCompare(b.ym));
-  const lastSnap = sortedSnaps.length > 0 ? sortedSnaps[sortedSnaps.length - 1] : null;
+    let colorClass = 'red'; // 80%未満
+    if (pct >= 100) colorClass = 'green';
+    else if (pct >= 95) colorClass = 'yellow';
+    else if (pct >= 80) colorClass = 'orange';
+    fill.className = `progress-fill ${colorClass}`;
+
+    // MoMバッジ (スナップショットとの比較)
+    snapshots.sort((a,b) => a.month.localeCompare(b.month));
+    const badge = document.getElementById('momBadge');
+    if (snapshots.length > 0) {
+      const lastSnap = snapshots[snapshots.length - 1];
+      const diff = total - lastSnap.amount;
+      if(Math.abs(diff) > 100) {
+        badge.classList.add('show');
+        badge.className = `mom-badge show ${diff > 0 ? 'plus' : 'minus'}`;
+        badge.innerText = `前月比 ${diff > 0 ? '+' : '-'}¥${fmt(Math.round(Math.abs(diff)))}`;
+      } else { badge.classList.remove('show'); }
+    } else { badge.classList.remove('show'); }
+
+    // リストの描画 (アコーディオン)
+    let listHtml = '';
+    const keys = ['cash', 'invest', 'insurance', 'crypto'];
+    keys.forEach(k => {
+      const list = grouped[k];
+      if (list.length === 0) return;
+      const subTotal = list.reduce((sum, a) => sum + calcJpy(a.amount, a.currency), 0);
+      listHtml += `
+        <details class="category-group" open>
+          <summary>
+            <div style="width:10px;height:10px;border-radius:3px;background:${catColors[k]}"></div>
+            ${catLabels[k]}
+            <span class="cat-total">¥${fmt(Math.round(subTotal))}</span>
+          </summary>
+          <div>
+            ${list.map(createCardHtml).join('')}
+          </div>
+        </details>
+      `;
+    });
+    document.getElementById('accountsList').innerHTML = listHtml;
+    
+    bindCardEvents();
+    renderChart(grouped, total);
+    renderTrends();
+  }
+
+  function bindCardEvents() {
+    document.querySelectorAll('.update-amt').forEach(el => {
+      el.addEventListener('input', e => {
+        const acc = accounts.find(a => a.id === e.target.dataset.id);
+        if(acc) { acc.amount = parseFloat(e.target.value) || 0; saveCloudData(); render(); }
+      });
+    });
+    document.querySelectorAll('.update-prin').forEach(el => {
+      el.addEventListener('input', e => {
+        const acc = accounts.find(a => a.id === e.target.dataset.id);
+        if(acc) { acc.principal = parseFloat(e.target.value) || 0; saveCloudData(); render(); }
+      });
+    });
+    document.querySelectorAll('.update-note').forEach(el => {
+      el.addEventListener('change', e => {
+        const acc = accounts.find(a => a.id === e.target.dataset.id);
+        if(acc) { acc.note = e.target.value; saveCloudData(); }
+      });
+    });
+    // カテゴリ変更イベント
+    document.querySelectorAll('.cat-select').forEach(el => {
+      el.addEventListener('change', e => {
+        const acc = accounts.find(a => a.id === e.target.dataset.id);
+        if(acc) { acc.category = e.target.value; saveCloudData(); render(); }
+      });
+    });
+    document.querySelectorAll('.remove-btn').forEach(el => {
+      el.addEventListener('click', e => {
+        if(confirm('削除しますか？')) {
+          accounts = accounts.filter(a => a.id !== e.target.dataset.id);
+          saveCloudData(); render();
+        }
+      });
+    });
+  }
+
+  function renderChart(grouped, total) {
+    if(!grouped || total === 0) {
+      document.getElementById('donutSvg').innerHTML = '';
+      document.getElementById('donutLegend').innerHTML = '';
+      return;
+    }
+    document.getElementById('donutTotal').innerText = `¥${fmt(Math.round(total))}`;
+    
+    let svgHtml = '';
+    let legHtml = '';
+    let accPct = 0;
+    
+    const keys = ['cash', 'invest', 'insurance', 'crypto'];
+    keys.forEach(k => {
+      const subTotal = grouped[k].reduce((sum, a) => sum + calcJpy(a.amount, a.currency), 0);
+      if(subTotal === 0) return;
+      
+      const pct = subTotal / total;
+      const dasharray = `${pct * 100} 100`;
+      const dashoffset = -(accPct * 100);
+      
+      svgHtml += `<circle cx="16" cy="16" r="14" fill="none" stroke="${catColors[k]}" stroke-width="4" stroke-dasharray="${dasharray}" stroke-dashoffset="${dashoffset}"></circle>`;
+      
+      legHtml += `
+        <div class="legend-row">
+          <div class="legend-dot" style="background:${catColors[k]}"></div>
+          <div class="legend-name">${catLabels[k]}</div>
+          <div class="legend-pct">${(pct*100).toFixed(1)}%</div>
+        </div>
+      `;
+      accPct += pct;
+    });
+
+    // donut center hole background
+    const centerColor = isDark ? '#1E1E24' : '#FFFFFF';
+    svgHtml = `<circle cx="16" cy="16" r="14" fill="none" stroke="${centerColor}" stroke-width="4" opacity="0.1"></circle>` + svgHtml;
+    
+    document.getElementById('donutSvg').innerHTML = svgHtml;
+    document.getElementById('donutLegend').innerHTML = legHtml;
+  }
+
+  function renderTrends() {
+    const list = document.getElementById('trendList');
+    if (snapshots.length === 0) {
+      list.innerHTML = `<div style="font-size:12px;color:var(--ink-faint);text-align:center;padding:10px;">記録がありません</div>`;
+      return;
+    }
+    
+    let html = '';
+    [...snapshots].reverse().forEach((s, i, arr) => {
+      const prev = arr[i+1];
+      let diffHtml = '<span class="trend-diff">-</span>';
+      if (prev) {
+        const diff = s.amount - prev.amount;
+        if (diff !== 0) {
+          const sign = diff > 0 ? '+' : '';
+          const cls = diff > 0 ? 'up' : 'down';
+          diffHtml = `<span class="trend-diff ${cls}">${sign}¥${fmt(Math.round(diff))}</span>`;
+        }
+      }
+      html += `
+        <div class="trend-row">
+          <div class="trend-month">${s.month}</div>
+          <div class="trend-amount">¥${fmt(Math.round(s.amount))}</div>
+          ${diffHtml}
+        </div>
+      `;
+    });
+    list.innerHTML = html;
+  }
+
+  // --- Snapshot Logic ---
+  const d = new Date();
+  const currentMonthStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;
+  let currentTotalCalc = 0;
   
-  if (lastSnap) {
-    document.getElementById('snapPrevYm').textContent = lastSnap.ym;
-    document.getElementById('snapPrevVal').textContent = fmtNum(lastSnap.totalJpy);
-    lastSnapAmountForModal = lastSnap.totalJpy;
-  } else {
-    document.getElementById('snapPrevYm').textContent = '記録なし';
-    document.getElementById('snapPrevVal').textContent = '0';
-    lastSnapAmountForModal = 0;
-  }
+  document.getElementById('takeSnapshotBtn').addEventListener('click', () => {
+    currentTotalCalc = accounts.reduce((sum, a) => sum + calcJpy(a.amount, a.currency), 0);
+    
+    const lastSnap = snapshots.length > 0 ? snapshots[snapshots.length-1] : null;
+    let prevVal = 0;
+    if(lastSnap) {
+      prevVal = lastSnap.amount;
+      document.getElementById('snapPrevVal').innerText = `¥${fmt(Math.round(prevVal))} (${lastSnap.month})`;
+    } else {
+      document.getElementById('snapPrevVal').innerText = `なし`;
+    }
+    
+    document.getElementById('snapCalcVal').innerText = `¥${fmt(Math.round(currentTotalCalc))}`;
+    document.getElementById('snapModalTitle').innerText = `${currentMonthStr}の資産を記録`;
+    
+    const input = document.getElementById('snapInputVal');
+    input.value = Math.round(currentTotalCalc);
+    
+    updateSnapDiff(Math.round(currentTotalCalc), prevVal);
+    
+    input.oninput = (e) => { updateSnapDiff(parseFloat(e.target.value)||0, prevVal); };
+    document.getElementById('snapModal').classList.add('open');
+  });
 
-  snapInput.value = currentTotal.toLocaleString('ja-JP');
-  updateSnapDiff();
-  snapModal.classList.add('open');
-};
-
-document.getElementById('closeSnapBtn').onclick = () => snapModal.classList.remove('open');
-
-snapInput.addEventListener('input', (e) => {
-  const raw = e.target.value.replace(/,/g, '');
-  if (!isNaN(raw) && raw !== '') {
-    updateSnapDiff(Number(raw));
-  }
-});
-snapInput.addEventListener('blur', (e) => {
-  const raw = Number(e.target.value.replace(/,/g, '')) || 0;
-  e.target.value = raw.toLocaleString('ja-JP');
-});
-
-function updateSnapDiff(manualVal) {
-  const val = manualVal !== undefined ? manualVal : Number(snapInput.value.replace(/,/g, '')) || 0;
-  const diff = val - lastSnapAmountForModal;
-  if (lastSnapAmountForModal === 0) {
-    snapDiffTxt.textContent = `差分: --`;
-    snapDiffTxt.className = 'snap-diff';
-  } else {
+  function updateSnapDiff(current, prev) {
+    const diffEl = document.getElementById('snapDiff');
+    if (prev === 0) { diffEl.innerText = ''; return; }
+    const diff = current - prev;
     const sign = diff > 0 ? '+' : '';
-    snapDiffTxt.textContent = `差分: ${sign}¥${fmtNum(diff)}`;
-    snapDiffTxt.className = `snap-diff ${diff > 0 ? 'plus' : (diff < 0 ? 'minus' : '')}`;
+    const cls = diff > 0 ? 'plus' : (diff < 0 ? 'minus' : '');
+    diffEl.className = `snap-diff ${cls}`;
+    diffEl.innerText = `前月比: ${sign}¥${fmt(Math.round(diff))}`;
   }
-}
 
-document.getElementById('saveSnapBtn').onclick = () => {
-  const finalVal = Number(snapInput.value.replace(/,/g, '')) || 0;
-  const curYm = ym(new Date());
-  snapshots = snapshots.filter(s => s.ym !== curYm);
-  snapshots.push({ ym: curYm, totalJpy: finalVal });
-  saveCloudData();
-  render();
-  snapModal.classList.remove('open');
-};
+  document.getElementById('snapCancelBtn').addEventListener('click', () => {
+    document.getElementById('snapModal').classList.remove('open');
+  });
 
-/* Init */
-try {
-  const c = JSON.parse(localStorage.getItem(FX_KEY));
-  if(c) { fxRate = c.rate; fxManual = c.m; }
-} catch(e){}
-if(window.db) initFirestore(); else window.addEventListener('firebase-ready', initFirestore);
-accounts = defaultAccounts; render();
-if(!fxManual) fetchRate();
+  document.getElementById('snapSaveBtn').addEventListener('click', () => {
+    const val = parseFloat(document.getElementById('snapInputVal').value) || 0;
+    const existingIdx = snapshots.findIndex(s => s.month === currentMonthStr);
+    if(existingIdx >= 0) {
+      snapshots[existingIdx].amount = val;
+    } else {
+      snapshots.push({ month: currentMonthStr, amount: val });
+    }
+    saveCloudData();
+    render();
+    document.getElementById('snapModal').classList.remove('open');
+  });
+
+  // --- Add Form Logic ---
+  document.getElementById('addBtn').addEventListener('click', () => {
+    document.getElementById('addForm').classList.toggle('open');
+  });
+  document.getElementById('cancelAddBtn').addEventListener('click', () => {
+    document.getElementById('addForm').classList.remove('open');
+  });
+  document.getElementById('saveAddBtn').addEventListener('click', () => {
+    const cat = document.getElementById('newCat').value;
+    const inst = document.getElementById('newInst').value || '未設定';
+    const prod = document.getElementById('newProd').value || '未設定';
+    const curr = document.getElementById('newCurr').value;
+    const amt = parseFloat(document.getElementById('newAmt').value) || 0;
+    const prin = parseFloat(document.getElementById('newPrin').value) || 0;
+    const note = document.getElementById('newNote').value || '';
+    
+    accounts.push({
+      id: 'a_' + Date.now(),
+      category: cat,
+      institution: inst,
+      product: prod,
+      currency: curr,
+      amount: amt,
+      principal: prin,
+      note: note
+    });
+    
+    document.getElementById('newInst').value = '';
+    document.getElementById('newProd').value = '';
+    document.getElementById('newAmt').value = '';
+    document.getElementById('newPrin').value = '';
+    document.getElementById('newNote').value = '';
+    document.getElementById('addForm').classList.remove('open');
+    
+    saveCloudData();
+    render();
+  });
+
+  document.getElementById('usdRate').addEventListener('change', updateFxRateLocally);
+  document.getElementById('fxRefresh').addEventListener('click', fetchFx);
+  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
 </script>
 </body>
