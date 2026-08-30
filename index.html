@@ -246,7 +246,7 @@
   <div class="wrap" id="appWrap">
     <header>
       <div class="eyebrow">資産帳</div>
-      <div class="total-label">総資産（円換算）</div>
+      <div class="total-label">総資産（円換算・時価ベース）</div>
       <div class="total-amount" id="totalAmount"><span class="yen">¥</span>0</div>
       <div class="updated-at" id="updatedAt">口座を追加して記帳を始めましょう</div>
       <div class="fx-bar">
@@ -267,11 +267,11 @@
     <div class="add-form" id="addForm">
       <div class="field full">
         <label>金融機関</label>
-        <input type="text" id="f_inst" placeholder="例：あおぞら銀行">
+        <input type="text" id="f_inst" placeholder="例：楽天証券">
       </div>
       <div class="field full">
         <label>商品名</label>
-        <input type="text" id="f_product" placeholder="例：貯金">
+        <input type="text" id="f_product" placeholder="例：株式・投信">
       </div>
       <div class="field">
         <label>通貨</label>
@@ -281,12 +281,12 @@
         </select>
       </div>
       <div class="field">
-        <label>金額</label>
+        <label>金額（時価）</label>
         <input type="text" inputmode="decimal" id="f_amount" class="amount" placeholder="0">
       </div>
       <div class="field full">
         <label>メモ（任意）</label>
-        <input type="text" id="f_note" placeholder="例：円定期 満期2027年">
+        <input type="text" id="f_note" placeholder="例：NISA口座など">
       </div>
       <div class="add-form-actions">
         <button class="btn-ghost" id="cancelAddBtn">キャンセル</button>
@@ -331,10 +331,10 @@ let fxManual = false;
 const FALLBACK_RATE = 159.5;
 
 const defaultAccounts = [
-  { id: 'a1', institution: 'あおぞら銀行', product: '貯金', currency: 'JPY', amount: 0, note: '', updatedAt: null },
-  { id: 'a2', institution: '明治安田生命', product: '個人年金', currency: 'JPY', amount: 0, note: '', updatedAt: null },
-  { id: 'a3', institution: '楽天証券', product: '株式・投信', currency: 'JPY', amount: 0, note: '', updatedAt: null },
-  { id: 'a4', institution: 'プルデンシャル', product: 'リタイアメントインカム', currency: 'USD', amount: 0, note: '', updatedAt: null },
+  { id: 'a1', institution: 'あおぞら銀行', product: '貯金', currency: 'JPY', amount: 0, principal: 0, note: '', updatedAt: null },
+  { id: 'a2', institution: '明治安田生命', product: '個人年金', currency: 'JPY', amount: 0, principal: 0, note: '', updatedAt: null },
+  { id: 'a3', institution: '楽天証券', product: '株式・投信', currency: 'JPY', amount: 0, principal: 0, note: '', updatedAt: null },
+  { id: 'a4', institution: 'プルデンシャル', product: 'リタイアメントインカム', currency: 'USD', amount: 0, principal: 0, note: '', updatedAt: null },
 ];
 
 function fmtNum(n, digits) {
@@ -484,7 +484,10 @@ async function initFirestore() {
       const data = docSnap.data();
       if (data.accounts) accounts = data.accounts;
       if (data.snapshots) snapshots = data.snapshots;
-      accounts.forEach(a => { if (!a.currency) a.currency = 'JPY'; });
+      accounts.forEach(a => {
+        if (!a.currency) a.currency = 'JPY';
+        if (a.principal === undefined) a.principal = 0;
+      });
       checkMonthBoundary();
       render();
     }
@@ -589,7 +592,14 @@ function render() {
 
   accounts.forEach((acc, i) => {
     const isUsd = acc.currency === 'USD';
+    const isInvestment = acc.institution.includes('証券') || acc.product.includes('投信') || acc.product.includes('株式');
     const tagColor = CHART_COLORS[i % CHART_COLORS.length];
+
+    const principalVal = Number(acc.principal) || 0;
+    const currentVal = Number(acc.amount) || 0;
+    const profitLoss = currentVal - principalVal;
+    const profitLossPct = principalVal > 0 ? (profitLoss / principalVal) * 100 : 0;
+
     const card = document.createElement('div');
     card.className = 'card';
     card.innerHTML = `
@@ -602,15 +612,30 @@ function render() {
         <button class="remove-btn" data-id="${acc.id}" title="削除">×</button>
       </div>
       <div class="card-body">
-        <div class="field full">
-          <label>金額（${isUsd ? 'US$' : '円'}）</label>
-          <input type="text" inputmode="decimal" class="amount amount-input" data-id="${acc.id}" value="${acc.amount !== '' && acc.amount !== null && !isNaN(acc.amount) ? Number(acc.amount).toLocaleString('ja-JP', {maximumFractionDigits: 2}) : ''}">
+        ${isInvestment ? `
+        <div class="field">
+          <label>投資元本（累計入金）</label>
+          <input type="text" inputmode="decimal" class="principal-input" data-id="${acc.id}" value="${acc.principal ? Number(acc.principal).toLocaleString('ja-JP', {maximumFractionDigits: 2}) : ''}" placeholder="0">
         </div>
+        ` : ''}
+        <div class="field ${isInvestment ? '' : 'full'}">
+          <label>${isInvestment ? '評価額（時価）' : '金額'}（${isUsd ? 'US$' : '円'}）</label>
+          <input type="text" inputmode="decimal" class="amount amount-input" data-id="${acc.id}" value="${acc.amount !== '' && acc.amount !== null && !isNaN(acc.amount) ? Number(acc.amount).toLocaleString('ja-JP', {maximumFractionDigits: 2}) : ''}" placeholder="0">
+        </div>
+
+        ${isInvestment && principalVal > 0 ? `
+        <div class="jpy-equiv" style="grid-column: 1/-1; background: ${profitLoss >= 0 ? 'rgba(30,127,92,0.08)' : 'rgba(193,68,61,0.08)'}; color: ${profitLoss >= 0 ? 'var(--up)' : 'var(--down)'};">
+          <span>含み損益</span>
+          <span class="val" style="color: inherit;">${profitLoss >= 0 ? '+' : ''}¥${fmtNum(profitLoss)}（${profitLoss >= 0 ? '+' : ''}${profitLossPct.toFixed(1)}%）</span>
+        </div>
+        ` : ''}
+
         ${isUsd ? `
         <div class="jpy-equiv">
-          <span>円換算</span>
+          <span>円換算（時価）</span>
           <span class="val">¥${fmtNum(toJpy(acc))}</span>
         </div>` : ''}
+
         <div class="field full">
           <label>メモ</label>
           <input type="text" class="note-input" data-id="${acc.id}" value="${escapeHtml(acc.note || '')}" placeholder="任意のメモ">
@@ -642,6 +667,9 @@ function render() {
     inp.addEventListener('focus', onAmountFocus);
     inp.addEventListener('blur', onAmountBlur);
     inp.addEventListener('change', onAmountChange);
+  });
+  list.querySelectorAll('.principal-input').forEach(inp => {
+    inp.addEventListener('change', onPrincipalChange);
   });
   list.querySelectorAll('.note-input').forEach(inp => inp.addEventListener('change', onNoteChange));
   list.querySelectorAll('.remove-btn').forEach(btn => btn.addEventListener('click', onRemove));
@@ -695,6 +723,17 @@ function onAmountChange(e) {
   saveAccounts();
 }
 
+function onPrincipalChange(e) {
+  const id = e.target.dataset.id;
+  const acc = accounts.find(a => a.id === id);
+  if (!acc) return;
+  const val = Number(String(e.target.value).replace(/,/g, '')) || 0;
+  acc.principal = val;
+  acc.updatedAt = new Date().toISOString();
+  saveAccounts();
+  render();
+}
+
 function onNoteChange(e) {
   const id = e.target.dataset.id;
   const acc = accounts.find(a => a.id === id);
@@ -732,6 +771,7 @@ document.getElementById('confirmAddBtn').addEventListener('click', () => {
     product: product || '未分類',
     currency,
     amount,
+    principal: 0,
     note,
     updatedAt: new Date().toISOString(),
   });
