@@ -108,9 +108,7 @@
   body:not(.dark-theme) .icon-moon { display: none; }
   body.dark-theme .icon-sun { display: none; }
 
-  .eyebrow { font-size: 12px; letter-spacing: 0.04em; color: rgba(255,255,255,0.7); font-weight: 500; position: relative; }
-  
-  .total-label { margin-top: 14px; font-size: 12px; color: rgba(255,255,255,0.8); letter-spacing: 0.02em; position: relative; display: flex; align-items: center; gap: 8px; }
+  .total-label { margin-top: 6px; font-size: 12px; color: rgba(255,255,255,0.8); letter-spacing: 0.02em; position: relative; display: flex; align-items: center; gap: 8px; }
   .mom-badge {
     background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 6px;
     font-size: 10.5px; font-weight: 700; display: none;
@@ -141,14 +139,16 @@
   body.dark-theme .total-profit.plus .val { text-shadow: 0 0 6px rgba(74,222,128,0.5); }
   .total-profit.minus .val { color: var(--down-light); }
 
-  /* Goal Progress Bar with Color Stages */
+  /* Goal Progress Bar */
   .goal-wrap {
     margin-top: 16px; position: relative; cursor: pointer;
     background: rgba(0,0,0,0.15); padding: 10px 12px; border-radius: 12px;
+    transition: background 0.2s;
   }
-  .goal-wrap:hover { background: rgba(0,0,0,0.2); }
+  .goal-wrap:hover { background: rgba(0,0,0,0.25); }
   .goal-label { font-size: 11px; color: rgba(255,255,255,0.8); display: flex; justify-content: space-between; margin-bottom: 6px; }
-  .goal-label span { font-weight: 700; color: #FFF; }
+  .goal-label span { font-weight: 700; color: #FFF; display: flex; align-items: center; gap: 4px; }
+  .goal-edit-hint { font-size: 9.5px; opacity: 0.7; font-weight: 400; }
   .progress-track { width: 100%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; }
   
   .progress-fill { height: 100%; width: 0%; transition: width 0.5s ease, background 0.3s, box-shadow 0.3s; }
@@ -194,16 +194,26 @@
     flex: none; width: 36px; height: 36px; border-radius: 11px; color: #FFFFFF;
     display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
   }
-  .card-heading { flex: 1; min-width: 0; }
-  .inst-name { font-size: 14.5px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .card-heading { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  
+  /* Editable Fields on Card */
+  .inst-input, .prod-input {
+    font-family: 'Zen Kaku Gothic New', sans-serif; background: transparent;
+    border: none; border-bottom: 1px dashed var(--border); color: var(--ink);
+    padding: 1px 2px; outline: none; width: 100%;
+  }
+  .inst-input { font-size: 14.5px; font-weight: 700; }
+  .prod-input { font-size: 11px; color: var(--ink-soft); }
+  .inst-input:focus, .prod-input:focus { border-bottom: 1.4px solid var(--accent); background: var(--surface-soft); }
+
+  .card-meta-row { display: flex; align-items: center; gap: 6px; }
   .currency-tag { font-size: 9.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.03em; }
   
-  /* Category Select on Card */
   .cat-select {
     font-size: 10px; font-weight: 500; font-family: 'Zen Kaku Gothic New', sans-serif;
     background: var(--surface-soft); color: var(--ink-soft);
     border: 1px solid var(--border); border-radius: 6px; padding: 2px 4px;
-    margin-top: 4px; outline: none; cursor: pointer; width: fit-content;
+    outline: none; cursor: pointer; width: fit-content;
   }
   .cat-select:focus { border-color: var(--accent); color: var(--ink); }
 
@@ -244,7 +254,7 @@
   .section-label .txt { font-size: 13.5px; font-weight: 700; color: var(--ink); }
   .section-label::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: none; }
 
-  /* Snapshot Modal */
+  /* Modals */
   .modal-overlay {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--modal-bg);
     display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px;
@@ -308,7 +318,6 @@
         <span id="themeLabel">Light Mode</span>
       </button>
 
-      <div class="eyebrow">Yana's 資産帳</div>
       <div class="total-label">
         総資産額
         <span class="mom-badge" id="momBadge"></span>
@@ -322,7 +331,7 @@
 
       <div class="goal-wrap" id="goalWrap">
         <div class="goal-label">
-          <span>目標 1億円</span>
+          <span>目標 <strong id="goalDisplayVal">100,000,000</strong>円 <span class="goal-edit-hint">✎タップして変更</span></span>
           <span id="goalPct">0%</span>
         </div>
         <div class="progress-track">
@@ -337,7 +346,7 @@
           <button class="fx-refresh" id="fxRefresh">更新</button>
         </div>
       </div>
-      <div class="fx-note" id="fxNote">手動更新</div>
+      <div class="fx-note" id="fxNote">自動取得中...</div>
     </header>
 
     <div class="section-label"><span class="txt">保有資産</span></div>
@@ -369,11 +378,11 @@
           <option value="USD">米ドル (USD)</option>
         </select>
       </div>
-      <div class="field">
-        <label>現在評価額</label>
+      <div class="field" id="newAmtFieldWrap">
+        <label id="newAmtLabel">現在評価額</label>
         <input type="number" id="newAmt" placeholder="0" class="amount" step="any">
       </div>
-      <div class="field">
+      <div class="field" id="newPrinFieldWrap">
         <label>元本 (任意)</label>
         <input type="number" id="newPrin" placeholder="0" step="any">
       </div>
@@ -410,6 +419,7 @@
     <footer class="foot-note">Data sync enabled.</footer>
   </div>
 
+  <!-- Snapshot Modal -->
   <div class="modal-overlay" id="snapModal">
     <div class="modal-content">
       <h3 id="snapModalTitle">当月の資産を記録</h3>
@@ -433,6 +443,21 @@
     </div>
   </div>
 
+  <!-- Goal Edit Modal -->
+  <div class="modal-overlay" id="goalModal">
+    <div class="modal-content">
+      <h3>目標額の設定</h3>
+      <div class="snap-input-wrap">
+        <label>目標総資産額 (円)</label>
+        <input type="number" id="goalInputVal" step="10000">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="goalCancelBtn">キャンセル</button>
+        <button class="btn-primary" id="goalSaveBtn">保存する</button>
+      </div>
+    </div>
+  </div>
+
   <div class="save-toast" id="toast">同期しました</div>
 
 <script>
@@ -442,12 +467,11 @@
   
   let usdRate = parseFloat(localStorage.getItem(USD_RATE_KEY)) || 150;
   let rateDate = localStorage.getItem(USD_DATE_KEY) || '';
+  let goalAmount = 100000000; // デフォルト1億円
 
-  // 大カテゴリの定義
   const catLabels = { cash: '現金', invest: '株式・投資信託', insurance: '保険等', crypto: '仮想通貨' };
   const catColors = { cash: '#60A5FA', invest: '#34D399', insurance: '#FBBF24', crypto: '#C084FC', other: '#A1A1AA' };
 
-  // デフォルトデータ（カテゴリ調整済み）
   const defaultAccounts = [
     { id: 'a1', category: 'cash', institution: 'あおぞら銀行', product: '貯金', currency: 'JPY', amount: 0, principal: 0, note: '' },
     { id: 'a2', category: 'insurance', institution: '明治安田生命', product: '個人年金', currency: 'JPY', amount: 0, principal: 0, note: '' },
@@ -479,17 +503,22 @@
         const data = snap.data();
         accounts = data.accounts || [];
         snapshots = data.snapshots || [];
+        if(data.goalAmount) goalAmount = data.goalAmount;
       } else {
         accounts = JSON.parse(JSON.stringify(defaultAccounts));
         snapshots = [];
-        await setDoc(docRef, { accounts, snapshots });
+        goalAmount = 100000000;
+        await setDoc(docRef, { accounts, snapshots, goalAmount });
       }
       render();
+      fetchFx(true); // 起動時に自動で為替取得を試みる
+      
       onSnapshot(docRef, (docSnap) => {
         if(docSnap.exists()){
           const d = docSnap.data();
           accounts = d.accounts || [];
           snapshots = d.snapshots || [];
+          if(d.goalAmount) goalAmount = d.goalAmount;
           render();
         }
       });
@@ -505,7 +534,7 @@
       if(!docRef) return;
       const { setDoc } = window.firebaseModules;
       try {
-        await setDoc(docRef, { accounts, snapshots }, { merge: true });
+        await setDoc(docRef, { accounts, snapshots, goalAmount }, { merge: true });
         showToast();
       } catch(e) { console.error("Save Error:", e); }
     }, 800);
@@ -527,16 +556,18 @@
     }
   }
 
-  async function fetchFx() {
+  async function fetchFx(isAuto = false) {
     try {
-      document.getElementById('fxRefresh').innerText = '...';
+      if(!isAuto) document.getElementById('fxRefresh').innerText = '...';
       const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
       const data = await res.json();
       if(data && data.rates && data.rates.JPY) {
         document.getElementById('usdRate').value = data.rates.JPY;
         updateFxRateLocally();
       }
-    } catch(e) { alert('為替取得失敗'); }
+    } catch(e) { 
+      if(!isAuto) alert('為替取得失敗'); 
+    }
     document.getElementById('fxRefresh').innerText = '更新';
   }
 
@@ -562,20 +593,53 @@
   function createCardHtml(acc) {
     const cJpy = calcJpy(acc.amount, acc.currency);
     const pJpy = calcJpy(acc.principal, acc.currency);
-    let jpyHtml = '';
-    let profitHtml = '';
+    let extraFieldsHtml = '';
 
-    if (acc.currency === 'USD') {
-      jpyHtml = `<div class="jpy-equiv"><span>円換算:</span><span class="val">¥${fmt(Math.round(cJpy))}</span></div>`;
-    }
+    if (acc.category === 'invest') {
+      // 株式・投資信託の場合：評価額と元本を表示
+      let profitHtml = '';
+      if (acc.principal > 0) {
+        const diff = cJpy - pJpy;
+        const diffPct = (diff / pJpy) * 100;
+        let diffStr = diff > 0 ? `+¥${fmt(Math.round(diff))}` : `-¥${fmt(Math.round(Math.abs(diff)))}`;
+        let colorCls = diff > 0 ? 'up-text' : (diff < 0 ? 'down-text' : '');
+        let pctStr = diff > 0 ? `(+${diffPct.toFixed(1)}%)` : `(${diffPct.toFixed(1)}%)`;
+        profitHtml = `<div class="jpy-equiv" style="padding-top:0;"><span>評価損益:</span><span class="val ${colorCls}">${diffStr} <span style="font-size:10px;font-weight:400;">${pctStr}</span></span></div>`;
+      }
+      
+      let jpyHtml = acc.currency === 'USD' ? `<div class="jpy-equiv"><span>円換算:</span><span class="val">¥${fmt(Math.round(cJpy))}</span></div>` : '';
 
-    if (acc.principal > 0) {
-      const diff = cJpy - pJpy;
-      const diffPct = (diff / pJpy) * 100;
-      let diffStr = diff > 0 ? `+¥${fmt(Math.round(diff))}` : `-¥${fmt(Math.round(Math.abs(diff)))}`;
-      let colorCls = diff > 0 ? 'up-text' : (diff < 0 ? 'down-text' : '');
-      let pctStr = diff > 0 ? `(+${diffPct.toFixed(1)}%)` : `(${diffPct.toFixed(1)}%)`;
-      profitHtml = `<div class="jpy-equiv" style="padding-top:0;"><span>評価損益:</span><span class="val ${colorCls}">${diffStr} <span style="font-size:10px;font-weight:400;">${pctStr}</span></span></div>`;
+      extraFieldsHtml = `
+        <div class="field">
+          <label>評価額 (${acc.currency})</label>
+          <input type="number" class="amount update-amt" data-id="${acc.id}" value="${acc.amount}" step="any">
+        </div>
+        <div class="field">
+          <label>元本 (${acc.currency})</label>
+          <input type="number" class="update-prin" data-id="${acc.id}" value="${acc.principal || 0}" step="any">
+        </div>
+        <div class="field full">
+          <label>メモ</label>
+          <input type="text" class="update-note" data-id="${acc.id}" value="${acc.note || ''}">
+        </div>
+        ${jpyHtml}
+        ${profitHtml}
+      `;
+    } else {
+      // その他（現金・保険等・仮想通貨）の場合：通常の金額のみ
+      let jpyHtml = acc.currency === 'USD' ? `<div class="jpy-equiv"><span>円換算:</span><span class="val">¥${fmt(Math.round(cJpy))}</span></div>` : '';
+
+      extraFieldsHtml = `
+        <div class="field full">
+          <label>金額 (${acc.currency})</label>
+          <input type="number" class="amount update-amt" data-id="${acc.id}" value="${acc.amount}" step="any">
+        </div>
+        <div class="field full">
+          <label>メモ</label>
+          <input type="text" class="update-note" data-id="${acc.id}" value="${acc.note || ''}">
+        </div>
+        ${jpyHtml}
+      `;
     }
 
     return `
@@ -583,32 +647,22 @@
         <div class="card-top">
           <div class="hanko" style="background:${catColors[acc.category] || catColors.other}">${getHanko(acc.institution)}</div>
           <div class="card-heading">
-            <div class="inst-name">${acc.institution} <span class="currency-tag">${acc.currency}</span></div>
-            <div style="font-size:11px; color:var(--ink-soft); margin-top:2px;">${acc.product}</div>
-            <select class="cat-select" data-id="${acc.id}">
-              <option value="cash" ${acc.category === 'cash' ? 'selected' : ''}>現金</option>
-              <option value="invest" ${acc.category === 'invest' ? 'selected' : ''}>株式・投資信託</option>
-              <option value="insurance" ${acc.category === 'insurance' ? 'selected' : ''}>保険等</option>
-              <option value="crypto" ${acc.category === 'crypto' ? 'selected' : ''}>仮想通貨</option>
-            </select>
+            <input type="text" class="inst-input update-inst" data-id="${acc.id}" value="${acc.institution}" placeholder="金融機関名">
+            <input type="text" class="prod-input update-prod" data-id="${acc.id}" value="${acc.product}" placeholder="商品名 / 銘柄">
+            <div class="card-meta-row">
+              <span class="currency-tag">${acc.currency}</span>
+              <select class="cat-select" data-id="${acc.id}">
+                <option value="cash" ${acc.category === 'cash' ? 'selected' : ''}>現金</option>
+                <option value="invest" ${acc.category === 'invest' ? 'selected' : ''}>株式・投資信託</option>
+                <option value="insurance" ${acc.category === 'insurance' ? 'selected' : ''}>保険等</option>
+                <option value="crypto" ${acc.category === 'crypto' ? 'selected' : ''}>仮想通貨</option>
+              </select>
+            </div>
           </div>
           <button class="remove-btn" data-id="${acc.id}">×</button>
         </div>
         <div class="card-body">
-          <div class="field">
-            <label>評価額 (${acc.currency})</label>
-            <input type="number" class="amount update-amt" data-id="${acc.id}" value="${acc.amount}" step="any">
-          </div>
-          <div class="field">
-            <label>元本 (${acc.currency})</label>
-            <input type="number" class="update-prin" data-id="${acc.id}" value="${acc.principal || 0}" step="any">
-          </div>
-          <div class="field full">
-            <label>メモ</label>
-            <input type="text" class="update-note" data-id="${acc.id}" value="${acc.note || ''}">
-          </div>
-          ${jpyHtml}
-          ${profitHtml}
+          ${extraFieldsHtml}
         </div>
       </div>
     `;
@@ -618,49 +672,52 @@
     let total = 0;
     let totalPrincipal = 0;
     
-    // カテゴリごとの集計
     const grouped = { cash: [], invest: [], insurance: [], crypto: [] };
     
     accounts.forEach(a => {
       const jpy = calcJpy(a.amount, a.currency);
       const prinJpy = calcJpy(a.principal, a.currency);
       total += jpy;
-      totalPrincipal += prinJpy;
+      if(a.category === 'invest') totalPrincipal += prinJpy;
+      
       if (grouped[a.category]) grouped[a.category].push(a);
-      else grouped.cash.push(a); // failsafe
+      else grouped.cash.push(a);
     });
 
     document.getElementById('totalJpy').innerText = fmt(Math.round(total));
     
-    // 総損益の計算
+    // 総損益（株式・投資信託の元本がある場合のみ表示）
     const profitBox = document.getElementById('totalProfitBox');
     const profitVal = document.getElementById('totalProfitVal');
-    if (totalPrincipal > 0) {
-      const tDiff = total - totalPrincipal;
-      const tPct = (tDiff / totalPrincipal) * 100;
+    const investAccountsTotal = grouped.invest.reduce((sum, a) => sum + calcJpy(a.amount, a.currency), 0);
+    const investPrincipalTotal = grouped.invest.reduce((sum, a) => sum + calcJpy(a.principal, a.currency), 0);
+    
+    if (investPrincipalTotal > 0) {
+      const tDiff = investAccountsTotal - investPrincipalTotal;
+      const tPct = (tDiff / investPrincipalTotal) * 100;
       profitBox.classList.add('show');
       profitBox.className = `total-profit show ${tDiff >= 0 ? 'plus' : 'minus'}`;
-      profitVal.innerText = `${tDiff >= 0 ? '+' : '-'}¥${fmt(Math.round(Math.abs(tDiff)))} (${tDiff >= 0 ? '+' : ''}${tPct.toFixed(1)}%)`;
+      profitVal.innerText = `投信損益: ${tDiff >= 0 ? '+' : '-'}¥${fmt(Math.round(Math.abs(tDiff)))} (${tDiff >= 0 ? '+' : ''}${tPct.toFixed(1)}%)`;
     } else {
       profitBox.classList.remove('show');
     }
 
-    // 目標 1億円 プログレス (色の変更処理)
-    const goal = 100000000;
-    let pct = (total / goal) * 100;
+    // 目標進捗バーと表示
+    document.getElementById('goalDisplayVal').innerText = fmt(goalAmount);
+    let pct = (total / goalAmount) * 100;
     if(pct > 100) pct = 100;
     
     document.getElementById('goalPct').innerText = `${pct.toFixed(1)}%`;
     const fill = document.getElementById('goalFill');
     fill.style.width = `${pct}%`;
 
-    let colorClass = 'red'; // 80%未満
+    let colorClass = 'red';
     if (pct >= 100) colorClass = 'green';
     else if (pct >= 95) colorClass = 'yellow';
     else if (pct >= 80) colorClass = 'orange';
     fill.className = `progress-fill ${colorClass}`;
 
-    // MoMバッジ (スナップショットとの比較)
+    // MoMバッジ
     snapshots.sort((a,b) => a.month.localeCompare(b.month));
     const badge = document.getElementById('momBadge');
     if (snapshots.length > 0) {
@@ -673,7 +730,7 @@
       } else { badge.classList.remove('show'); }
     } else { badge.classList.remove('show'); }
 
-    // リストの描画 (アコーディオン)
+    // リスト描画
     let listHtml = '';
     const keys = ['cash', 'invest', 'insurance', 'crypto'];
     keys.forEach(k => {
@@ -713,13 +770,24 @@
         if(acc) { acc.principal = parseFloat(e.target.value) || 0; saveCloudData(); render(); }
       });
     });
+    document.querySelectorAll('.update-inst').forEach(el => {
+      el.addEventListener('input', e => {
+        const acc = accounts.find(a => a.id === e.target.dataset.id);
+        if(acc) { acc.institution = e.target.value; saveCloudData(); }
+      });
+    });
+    document.querySelectorAll('.update-prod').forEach(el => {
+      el.addEventListener('input', e => {
+        const acc = accounts.find(a => a.id === e.target.dataset.id);
+        if(acc) { acc.product = e.target.value; saveCloudData(); }
+      });
+    });
     document.querySelectorAll('.update-note').forEach(el => {
       el.addEventListener('change', e => {
         const acc = accounts.find(a => a.id === e.target.dataset.id);
         if(acc) { acc.note = e.target.value; saveCloudData(); }
       });
     });
-    // カテゴリ変更イベント
     document.querySelectorAll('.cat-select').forEach(el => {
       el.addEventListener('change', e => {
         const acc = accounts.find(a => a.id === e.target.dataset.id);
@@ -769,7 +837,6 @@
       accPct += pct;
     });
 
-    // donut center hole background
     const centerColor = isDark ? '#1E1E24' : '#FFFFFF';
     svgHtml = `<circle cx="16" cy="16" r="14" fill="none" stroke="${centerColor}" stroke-width="4" opacity="0.1"></circle>` + svgHtml;
     
@@ -807,14 +874,30 @@
     list.innerHTML = html;
   }
 
-  // --- Snapshot Logic ---
+  // --- Goal Edit Modal Logic ---
+  document.getElementById('goalWrap').addEventListener('click', () => {
+    document.getElementById('goalInputVal').value = goalAmount;
+    document.getElementById('goalModal').classList.add('open');
+  });
+  document.getElementById('goalCancelBtn').addEventListener('click', () => {
+    document.getElementById('goalModal').classList.remove('open');
+  });
+  document.getElementById('goalSaveBtn').addEventListener('click', () => {
+    const val = parseFloat(document.getElementById('goalInputVal').value);
+    if(val > 0) {
+      goalAmount = val;
+      saveCloudData();
+      render();
+    }
+    document.getElementById('goalModal').classList.remove('open');
+  });
+
+  // --- Snapshot Modal Logic ---
   const d = new Date();
   const currentMonthStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;
-  let currentTotalCalc = 0;
   
   document.getElementById('takeSnapshotBtn').addEventListener('click', () => {
-    currentTotalCalc = accounts.reduce((sum, a) => sum + calcJpy(a.amount, a.currency), 0);
-    
+    const currentTotalCalc = accounts.reduce((sum, a) => sum + calcJpy(a.amount, a.currency), 0);
     const lastSnap = snapshots.length > 0 ? snapshots[snapshots.length-1] : null;
     let prevVal = 0;
     if(lastSnap) {
@@ -829,7 +912,6 @@
     
     const input = document.getElementById('snapInputVal');
     input.value = Math.round(currentTotalCalc);
-    
     updateSnapDiff(Math.round(currentTotalCalc), prevVal);
     
     input.oninput = (e) => { updateSnapDiff(parseFloat(e.target.value)||0, prevVal); };
@@ -863,8 +945,29 @@
     document.getElementById('snapModal').classList.remove('open');
   });
 
-  // --- Add Form Logic ---
+  // --- Add Form Logic & Category Dynamic Switch ---
+  function updateAddFormCategoryUI() {
+    const cat = document.getElementById('newCat').value;
+    const amtWrap = document.getElementById('newAmtFieldWrap');
+    const prinWrap = document.getElementById('newPrinFieldWrap');
+    const amtLabel = document.getElementById('newAmtLabel');
+
+    if (cat === 'invest') {
+      amtLabel.innerText = '評価額';
+      prinWrap.style.display = 'flex';
+      amtWrap.className = 'field';
+    } else {
+      amtLabel.innerText = '金額';
+      prinWrap.style.display = 'none';
+      document.getElementById('newPrin').value = '0';
+      amtWrap.className = 'field full';
+    }
+  }
+
+  document.getElementById('newCat').addEventListener('change', updateAddFormCategoryUI);
+
   document.getElementById('addBtn').addEventListener('click', () => {
+    updateAddFormCategoryUI();
     document.getElementById('addForm').classList.toggle('open');
   });
   document.getElementById('cancelAddBtn').addEventListener('click', () => {
@@ -876,7 +979,7 @@
     const prod = document.getElementById('newProd').value || '未設定';
     const curr = document.getElementById('newCurr').value;
     const amt = parseFloat(document.getElementById('newAmt').value) || 0;
-    const prin = parseFloat(document.getElementById('newPrin').value) || 0;
+    const prin = cat === 'invest' ? (parseFloat(document.getElementById('newPrin').value) || 0) : 0;
     const note = document.getElementById('newNote').value || '';
     
     accounts.push({
@@ -902,7 +1005,7 @@
   });
 
   document.getElementById('usdRate').addEventListener('change', updateFxRateLocally);
-  document.getElementById('fxRefresh').addEventListener('click', fetchFx);
+  document.getElementById('fxRefresh').addEventListener('click', () => fetchFx(false));
   document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
 </script>
