@@ -45,6 +45,25 @@
     --down: #C1443D;
     --up-light: #4ADE80;
     --down-light: #F87171;
+    --gold: #D4AF37;
+    --gold-light: #FFDF00;
+    --modal-bg: rgba(0,0,0,0.4);
+  }
+
+  body.dark-theme {
+    --bg: #121212;
+    --surface: #1E1E24;
+    --surface-soft: #2A2A35;
+    --border: rgba(255,255,255,0.1);
+    --ink: #E4E4E7;
+    --ink-soft: #A1A1AA;
+    --ink-faint: #71717A;
+    --accent: #4FA8D1;
+    --accent-2: #2E5C7A;
+    --accent-soft: rgba(79, 168, 209, 0.15);
+    --up: #4ADE80;
+    --down: #F87171;
+    --modal-bg: rgba(0,0,0,0.7);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -54,6 +73,7 @@
     color: var(--ink);
     font-family: 'Zen Kaku Gothic New', sans-serif;
     -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s, color 0.3s;
   }
 
   body { min-height: 100vh; padding-bottom: 60px; }
@@ -68,17 +88,34 @@
     margin-top: 14px;
     position: relative;
     overflow: hidden;
-    box-shadow: 0 8px 24px rgba(31,58,84,0.18);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
   }
   header::before {
-    content: "";
-    position: absolute;
-    right: -60px; top: -70px;
-    width: 220px; height: 220px;
+    content: ""; position: absolute; right: -60px; top: -70px; width: 220px; height: 220px;
     background: radial-gradient(circle, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0) 70%);
   }
+
+  .theme-toggle {
+    position: absolute; top: 18px; right: 20px;
+    background: rgba(255,255,255,0.2); border: none; border-radius: 50%;
+    width: 32px; height: 32px; font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; z-index: 2;
+    transition: background 0.2s;
+  }
+  .theme-toggle:active { background: rgba(255,255,255,0.3); }
+
   .eyebrow { font-size: 12px; letter-spacing: 0.04em; color: rgba(255,255,255,0.7); font-weight: 500; position: relative; }
-  .total-label { margin-top: 14px; font-size: 12px; color: rgba(255,255,255,0.65); letter-spacing: 0.02em; position: relative; }
+  
+  .total-label { margin-top: 14px; font-size: 12px; color: rgba(255,255,255,0.8); letter-spacing: 0.02em; position: relative; display: flex; align-items: center; gap: 8px; }
+  .mom-badge {
+    background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 6px;
+    font-size: 10.5px; font-weight: 700; display: none;
+  }
+  .mom-badge.show { display: inline-block; }
+  .mom-badge.plus { background: rgba(74,222,128,0.2); color: var(--up-light); }
+  body.dark-theme .mom-badge.plus { text-shadow: 0 0 6px rgba(74,222,128,0.5); }
+  .mom-badge.minus { background: rgba(248,113,113,0.2); color: var(--down-light); }
+
   .total-amount {
     font-family: 'Zen Kaku Gothic New', sans-serif;
     font-size: 38px; font-weight: 900;
@@ -87,87 +124,73 @@
     font-variant-numeric: tabular-nums;
     position: relative;
   }
+  body.dark-theme .total-amount { text-shadow: 0 0 12px rgba(255,255,255,0.2); }
   .total-amount .yen { font-size: 20px; margin-right: 3px; font-weight: 700; color: rgba(255,255,255,0.75); }
   
   .total-profit {
-    margin-top: 6px;
-    font-size: 13.5px;
-    position: relative;
-    display: none;
-    align-items: center;
-    gap: 6px;
+    margin-top: 6px; font-size: 13.5px; position: relative; display: none; align-items: center; gap: 6px;
   }
   .total-profit.show { display: flex; }
   .total-profit .label { color: rgba(255,255,255,0.7); font-size: 12px; }
   .total-profit .val { font-weight: 700; font-variant-numeric: tabular-nums; }
   .total-profit.plus .val { color: var(--up-light); }
+  body.dark-theme .total-profit.plus .val { text-shadow: 0 0 6px rgba(74,222,128,0.5); }
   .total-profit.minus .val { color: var(--down-light); }
 
-  .updated-at { margin-top: 10px; font-size: 11.5px; color: rgba(255,255,255,0.55); position: relative; }
+  /* Goal Progress Bar */
+  .goal-wrap {
+    margin-top: 16px; position: relative; cursor: pointer;
+    background: rgba(0,0,0,0.15); padding: 10px 12px; border-radius: 12px;
+  }
+  .goal-wrap:hover { background: rgba(0,0,0,0.2); }
+  .goal-label { font-size: 11px; color: rgba(255,255,255,0.8); display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .goal-label span { font-weight: 700; color: #FFF; }
+  .progress-track { width: 100%; height: 6px; background: rgba(255,255,255,0.2); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; width: 0%; background: var(--up-light); transition: width 0.5s ease, background 0.3s; }
+  .progress-fill.gold { background: linear-gradient(90deg, var(--gold), var(--gold-light)); box-shadow: 0 0 8px rgba(255,223,0,0.6); }
 
   .fx-bar {
-    margin-top: 18px;
-    padding-top: 14px;
-    border-top: 1px solid rgba(255,255,255,0.16);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 12px;
-    color: rgba(255,255,255,0.75);
-    position: relative;
+    margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.16);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 12px; color: rgba(255,255,255,0.75); position: relative;
   }
   .fx-refresh {
-    border: none;
-    background: rgba(255,255,255,0.16);
-    color: #FFFFFF;
-    font-size: 11.5px;
-    font-weight: 500;
-    padding: 6px 12px;
-    border-radius: 20px;
-    cursor: pointer;
+    border: none; background: rgba(255,255,255,0.16); color: #FFFFFF;
+    font-size: 11.5px; font-weight: 500; padding: 6px 12px; border-radius: 20px; cursor: pointer;
   }
-  .fx-refresh:active { background: rgba(255,255,255,0.26); }
-  .fx-refresh.loading { opacity: 0.5; }
   .fx-rate-input {
-    width: 60px;
-    font-family: 'Zen Kaku Gothic New', sans-serif;
-    font-weight: 700;
-    color: #FFFFFF;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid rgba(255,255,255,0.4);
-    font-size: 12.5px;
-    padding: 2px 2px;
-    text-align: right;
+    width: 60px; font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 700;
+    color: #FFFFFF; background: transparent; border: none; border-bottom: 1px solid rgba(255,255,255,0.4);
+    font-size: 12.5px; padding: 2px 2px; text-align: right;
   }
   .fx-rate-input:focus { outline: none; border-bottom: 1.4px solid #FFFFFF; }
   .fx-note { margin-top: 6px; font-size: 10.5px; color: rgba(255,255,255,0.5); text-align: right; position: relative; }
 
-  .section-label { display: flex; align-items: center; gap: 8px; margin: 28px 0 12px 2px; }
-  .section-label .txt { font-size: 12.5px; font-weight: 700; letter-spacing: 0.02em; color: var(--ink); }
-  .section-label::before {
-    content: "";
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--accent);
-    flex: none;
+  /* Accordion / Category */
+  details.category-group { margin-top: 20px; }
+  details.category-group summary {
+    display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 700;
+    color: var(--ink); cursor: pointer; list-style: none; padding: 8px 4px; margin-bottom: 8px;
+    border-bottom: 2px solid var(--border);
   }
+  details.category-group summary::-webkit-details-marker { display: none; }
+  details.category-group summary::before {
+    content: "▶"; font-size: 10px; color: var(--accent); transition: transform 0.2s; display: inline-block;
+  }
+  details.category-group[open] summary::before { transform: rotate(90deg); }
+  details.category-group summary .cat-total { margin-left: auto; font-size: 14px; font-variant-numeric: tabular-nums; }
 
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px 16px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(20,22,30,0.03); }
-
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px 16px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
   .card-top { display: flex; align-items: center; gap: 12px; }
-
   .hanko {
-    flex: none; width: 36px; height: 36px; border-radius: 11px;
-    color: #FFFFFF; display: flex; align-items: center; justify-content: center;
-    font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 700; font-size: 14px;
+    flex: none; width: 36px; height: 36px; border-radius: 11px; color: #FFFFFF;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;
   }
-
   .card-heading { flex: 1; min-width: 0; }
   .inst-name { font-size: 14.5px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; }
   .currency-tag { font-size: 9.5px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 1px 6px; border-radius: 6px; letter-spacing: 0.03em; }
   .product-name { font-size: 11.5px; color: var(--ink-soft); margin-top: 1px; }
-
-  .remove-btn { flex: none; border: none; background: none; color: var(--ink-faint); font-size: 18px; line-height: 1; padding: 4px 6px; cursor: pointer; }
+  .remove-btn { flex: none; border: none; background: none; color: var(--ink-faint); font-size: 18px; padding: 4px 6px; cursor: pointer; }
   .remove-btn:hover { color: var(--down); }
 
   .card-body { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -175,101 +198,111 @@
   .field.full { grid-column: 1 / -1; }
   .field label { font-size: 10.5px; color: var(--ink-soft); letter-spacing: 0.02em; }
   .field input, .field select {
-    font-family: 'Zen Kaku Gothic New', sans-serif;
-    border: none; border-bottom: 1px solid var(--border);
+    font-family: 'Zen Kaku Gothic New', sans-serif; border: none; border-bottom: 1px solid var(--border);
     background: transparent; font-size: 14px; padding: 5px 2px; color: var(--ink);
   }
   .field input:focus, .field select:focus { outline: none; border-bottom: 1.4px solid var(--accent); }
   .field input.amount { font-weight: 700; font-size: 17px; color: var(--accent); font-variant-numeric: tabular-nums; }
 
   .jpy-equiv {
-    grid-column: 1 / -1;
-    background: var(--accent-soft);
-    border-radius: 10px;
-    padding: 9px 11px;
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    font-size: 11.5px;
-    color: var(--ink-soft);
+    grid-column: 1 / -1; border-radius: 10px; padding: 9px 11px;
+    display: flex; justify-content: space-between; align-items: baseline; font-size: 11.5px; color: var(--ink-soft);
   }
-  .jpy-equiv .val {
-    font-weight: 700;
-    font-size: 15px;
-    color: var(--accent);
-    font-variant-numeric: tabular-nums;
-  }
+  .jpy-equiv .val { font-weight: 700; font-size: 15px; color: var(--accent); font-variant-numeric: tabular-nums; }
+  body.dark-theme .up-text { color: var(--up); text-shadow: 0 0 6px rgba(74,222,128,0.3); }
 
   .row-note { margin-top: 10px; font-size: 10.5px; color: var(--ink-faint); display: flex; justify-content: space-between; }
 
   .add-btn {
-    width: 100%; padding: 13px; margin-top: 6px;
-    border-radius: 12px; border: none;
-    background: var(--accent-soft); color: var(--accent);
-    font-family: 'Zen Kaku Gothic New', sans-serif; font-weight: 700; font-size: 13px;
-    letter-spacing: 0.01em; cursor: pointer;
+    width: 100%; padding: 13px; margin-top: 10px; border-radius: 12px; border: none;
+    background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 13px; cursor: pointer;
   }
-  .add-btn:active { opacity: 0.8; }
 
-  .add-form { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-top: 6px; gap: 10px; grid-template-columns: 1fr 1fr; box-shadow: 0 1px 3px rgba(20,22,30,0.03); }
+  .add-form { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-top: 6px; gap: 10px; grid-template-columns: 1fr 1fr; }
   .add-form.open { display: grid; }
-  .add-form .field.full { grid-column: 1/-1; }
   .add-form-actions { grid-column: 1/-1; display: flex; gap: 8px; margin-top: 4px; }
-  .btn-primary, .btn-ghost { flex: 1; padding: 11px; border-radius: 10px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; font-family: 'Zen Kaku Gothic New', sans-serif; }
+  .btn-primary, .btn-ghost { flex: 1; padding: 11px; border-radius: 10px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; }
   .btn-primary { background: var(--accent); color: #FFFFFF; }
   .btn-ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--border); }
 
-  .save-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #FFFFFF; font-size: 12px; padding: 9px 18px; border-radius: 20px; opacity: 0; transition: opacity 0.25s, transform 0.25s; pointer-events: none; letter-spacing: 0.02em; z-index: 10; }
-  .save-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .section-label { display: flex; align-items: center; gap: 8px; margin: 32px 0 12px 2px; }
+  .section-label .txt { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+  .section-label::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: none; }
 
-  .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-soft); font-size: 13px; }
+  /* Snapshot Modal */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--modal-bg);
+    display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal-content {
+    background: var(--surface); width: 100%; max-width: 360px; border-radius: 20px; padding: 24px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+  }
+  .modal-content h3 { font-size: 16px; margin-bottom: 16px; color: var(--ink); text-align: center; }
+  .snap-stat { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-soft); margin-bottom: 12px; }
+  .snap-stat .val { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .snap-input-wrap { margin: 16px 0; }
+  .snap-input-wrap label { display: block; font-size: 11px; color: var(--ink-soft); margin-bottom: 6px; }
+  .snap-input-wrap input {
+    width: 100%; font-size: 24px; font-weight: 900; color: var(--accent);
+    padding: 12px; border: 2px solid var(--border); border-radius: 12px;
+    background: var(--bg); text-align: right; font-family: 'Zen Kaku Gothic New', sans-serif;
+  }
+  .snap-input-wrap input:focus { outline: none; border-color: var(--accent); }
+  .snap-diff { text-align: right; font-size: 13px; font-weight: 700; margin-bottom: 20px; font-variant-numeric: tabular-nums; }
+  .snap-diff.plus { color: var(--up); }
+  .snap-diff.minus { color: var(--down); }
+  .modal-actions { display: flex; gap: 10px; }
 
-  footer.foot-note { text-align: center; font-size: 10.5px; color: var(--ink-faint); margin-top: 26px; letter-spacing: 0.02em; }
-
-  /* Allocation donut */
+  /* Charts & Trends */
   .donut-wrap { position: relative; width: 138px; height: 138px; margin: 6px auto 18px; }
   .donut-svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-  .donut-center {
-    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    font-size: 11px; color: var(--ink-soft); text-align: center;
-    line-height: 1.5; flex-direction: column;
-  }
-  .donut-center div:last-child { font-weight: 700; color: var(--ink); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .donut-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--ink-soft); flex-direction: column; }
+  .donut-center div:last-child { font-weight: 700; color: var(--ink); font-size: 14px; }
   .legend { display: flex; flex-direction: column; gap: 10px; }
   .legend-row { display: flex; align-items: center; gap: 8px; font-size: 12.5px; }
   .legend-dot { width: 9px; height: 9px; border-radius: 3px; flex: none; }
   .legend-name { flex: 1; color: var(--ink); }
-  .legend-pct { font-weight: 700; color: var(--ink); width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
+  .legend-pct { font-weight: 700; color: var(--ink); width: 44px; text-align: right; }
 
-  /* Monthly trend */
-  .trend-head { display: flex; flex-direction: column; gap: 10px; margin-bottom: 4px; }
-  .trend-head-label { font-size: 11.5px; color: var(--ink-soft); }
-  .trend-record-btn { margin-top: 0; padding: 11px; font-size: 12.5px; }
-  .trend-row {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 11px 0; border-top: 1px solid var(--border);
-  }
-  .trend-row:first-child { border-top: none; }
+  .trend-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 0; border-top: 1px solid var(--border); }
   .trend-month { font-size: 12px; color: var(--ink-soft); width: 58px; }
-  .trend-amount { font-weight: 700; font-size: 14.5px; color: var(--ink); flex: 1; text-align: right; font-variant-numeric: tabular-nums; }
+  .trend-amount { font-weight: 700; font-size: 14.5px; color: var(--ink); flex: 1; text-align: right; }
   .trend-diff { font-size: 11px; width: 96px; text-align: right; font-variant-numeric: tabular-nums; }
   .trend-diff.up { color: var(--up); }
   .trend-diff.down { color: var(--down); }
-  .trend-diff.flat { color: var(--ink-faint); }
+
+  .save-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(20px); background: #14161B; color: #FFFFFF; font-size: 12px; padding: 9px 18px; border-radius: 20px; opacity: 0; transition: 0.25s; pointer-events: none; z-index: 200; }
+  .save-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  footer.foot-note { text-align: center; font-size: 10.5px; color: var(--ink-faint); margin: 30px 0; }
 </style>
 </head>
 <body>
 
   <div class="wrap" id="appWrap">
     <header>
+      <button class="theme-toggle" id="themeToggle">🌙</button>
       <div class="eyebrow">資産帳</div>
-      <div class="total-label">総資産（円換算・時価ベース）</div>
-      <div class="total-amount" id="totalAmount"><span class="yen">¥</span>0</div>
-      <div class="total-profit" id="totalProfit">
-        <span class="label">投資損益</span>
-        <span class="val"></span>
+      <div class="total-label">
+        総資産（円換算・時価ベース）
+        <span id="momBadge" class="mom-badge"></span>
       </div>
-      <div class="updated-at" id="updatedAt">口座を追加して記帳を始めましょう</div>
+      <div class="total-amount" id="totalAmount"><span class="yen">¥</span>0</div>
+      
+      <div class="total-profit" id="totalProfit">
+        <span class="label">投資損益</span><span class="val"></span>
+      </div>
+
+      <div class="goal-wrap" id="goalWrap">
+        <div class="goal-label">
+          <span>🎯 目標 <span id="goalTextVal">10,000,000</span>円</span>
+          <span>あと <span id="goalRemainVal">0</span>円</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+
       <div class="fx-bar">
         <span>1USD＝</span>
         <input type="number" step="0.01" id="fxRateInput" class="fx-rate-input" value="">
@@ -279,13 +312,19 @@
       <div class="fx-note" id="fxNote"></div>
     </header>
 
-    <div class="section-label"><span class="txt">口座一覧</span></div>
-
-    <div id="cardList"></div>
+    <div id="accountGroups"></div>
 
     <button class="add-btn" id="showAddBtn">＋ 口座を追加する</button>
 
     <div class="add-form" id="addForm">
+      <div class="field full">
+        <label>カテゴリ</label>
+        <select id="f_category">
+          <option value="cash">現金・預金</option>
+          <option value="invest">株式・投資信託</option>
+          <option value="insurance">拘束資産（保険など）</option>
+        </select>
+      </div>
       <div class="field full">
         <label>金融機関</label>
         <input type="text" id="f_inst" placeholder="例：楽天証券">
@@ -305,295 +344,132 @@
         <label>金額（時価）</label>
         <input type="text" inputmode="decimal" id="f_amount" class="amount" placeholder="0">
       </div>
-      <div class="field full">
-        <label>メモ（任意）</label>
-        <input type="text" id="f_note" placeholder="例：NISA口座など">
-      </div>
       <div class="add-form-actions">
         <button class="btn-ghost" id="cancelAddBtn">キャンセル</button>
-        <button class="btn-primary" id="confirmAddBtn">記帳する</button>
+        <button class="btn-primary" id="confirmAddBtn">追加する</button>
       </div>
     </div>
 
     <div class="section-label"><span class="txt">資産配分</span></div>
     <div class="card" id="allocationCard">
-      <div class="donut-wrap">
-        <svg viewBox="0 0 120 120" class="donut-svg" id="donutSvg"></svg>
-        <div class="donut-center" id="donutCenter"></div>
-      </div>
+      <div class="donut-wrap"><svg viewBox="0 0 120 120" class="donut-svg" id="donutSvg"></svg><div class="donut-center" id="donutCenter"></div></div>
       <div class="legend" id="legendList"></div>
     </div>
 
     <div class="section-label"><span class="txt">月次推移</span></div>
     <div class="card">
-      <div class="trend-head">
-        <span class="trend-head-label">月末時点の総資産を記録</span>
-        <button class="add-btn trend-record-btn" id="recordSnapshotBtn">＋ 今月分を記録する</button>
-      </div>
+      <p style="font-size:11.5px;color:var(--ink-soft);margin-bottom:8px;">月末時点の総資産を記録します</p>
+      <button class="add-btn" id="openSnapBtn" style="margin-top:0;margin-bottom:16px;">＋ 今月分を記録する</button>
       <div id="trendList"></div>
-      <div class="row-note" id="trendEmptyNote"></div>
     </div>
 
-    <footer class="foot-note">
-      数値はFirestoreに同期されます／為替レートは参考値です
-    </footer>
+    <footer class="foot-note">数値はFirestoreに同期されます</footer>
   </div>
 
-  <div class="save-toast" id="saveToast">記帳しました</div>
+  <!-- Snapshot Modal -->
+  <div class="modal-overlay" id="snapModal">
+    <div class="modal-content">
+      <h3>月次スナップショット記録</h3>
+      <div class="snap-stat">
+        <span>前回記録 (<span id="snapPrevYm">--</span>)</span>
+        <span class="val">¥<span id="snapPrevVal">0</span></span>
+      </div>
+      <div class="snap-input-wrap">
+        <label>今回記録する総資産額（合算値が初期入力されています）</label>
+        <input type="text" inputmode="numeric" id="snapInputVal">
+      </div>
+      <div class="snap-diff" id="snapDiffText">差分: --</div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="closeSnapBtn">キャンセル</button>
+        <button class="btn-primary" id="saveSnapBtn">この金額で記録</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="save-toast" id="saveToast">保存しました</div>
 
 <script>
 const FX_KEY = 'fx_usd_jpy';
 const CHART_COLORS = ['#1F3A54', '#C1443D', '#D9A441', '#1E7F5C', '#6B4E9A', '#3D8B9E', '#B5623F', '#5A6B8C'];
+const FALLBACK_RATE = 159.5;
+
 let accounts = [];
 let snapshots = [];
 let fxRate = null;
 let fxFetchedAt = null;
 let fxManual = false;
-const FALLBACK_RATE = 159.5;
+let goalAmount = Number(localStorage.getItem('shisan_goal')) || 10000000;
+let lastSnapAmountForModal = 0;
 
 const defaultAccounts = [
-  { id: 'a1', institution: 'あおぞら銀行', product: '貯金', currency: 'JPY', amount: 0, principal: 0, note: '', updatedAt: null },
-  { id: 'a2', institution: '明治安田生命', product: '個人年金', currency: 'JPY', amount: 0, principal: 0, note: '', updatedAt: null },
-  { id: 'a3', institution: '楽天証券', product: '株式・投信', currency: 'JPY', amount: 0, principal: 0, note: '', updatedAt: null },
-  { id: 'a4', institution: 'プルデンシャル', product: 'リタイアメントインカム', currency: 'USD', amount: 0, principal: 0, note: '', updatedAt: null },
+  { id: 'a1', category: 'cash', institution: 'あおぞら銀行', product: '貯金', currency: 'JPY', amount: 0, principal: 0, note: '' },
+  { id: 'a3', category: 'invest', institution: '楽天証券', product: '株式・投信', currency: 'JPY', amount: 0, principal: 0, note: '' },
+  { id: 'a2', category: 'insurance', institution: '明治安田生命', product: '個人年金', currency: 'JPY', amount: 0, principal: 0, note: '' },
 ];
 
-function fmtNum(n, digits) {
-  return Number(n).toLocaleString('ja-JP', { maximumFractionDigits: digits || 0, minimumFractionDigits: 0 });
-}
-function fmtDate(iso) {
-  if (!iso) return '未記帳';
-  const d = new Date(iso);
-  return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}時点`;
-}
-function hankoChar(name) { return name ? name.charAt(0) : '？'; }
-function toJpy(acc) {
-  if (acc.currency === 'USD') return (Number(acc.amount) || 0) * (fxRate || 0);
-  return Number(acc.amount) || 0;
-}
+const catLabels = { cash: '現金・預金', invest: '株式・投資信託', insurance: '拘束資産（保険など）' };
 
+/* Theme Setup */
+const themeBtn = document.getElementById('themeToggle');
+let isDark = localStorage.getItem('shisan_theme') === 'dark';
+if(isDark) document.body.classList.add('dark-theme');
+themeBtn.textContent = isDark ? '🌞' : '🌙';
+themeBtn.onclick = () => {
+  isDark = !isDark;
+  document.body.classList.toggle('dark-theme', isDark);
+  localStorage.setItem('shisan_theme', isDark ? 'dark' : 'light');
+  themeBtn.textContent = isDark ? '🌞' : '🌙';
+};
+
+/* Goal Setup */
+document.getElementById('goalWrap').onclick = () => {
+  const ans = prompt('目標金額（円）を入力してください（半角数字）', goalAmount);
+  if(ans && !isNaN(ans.replace(/,/g, ''))) {
+    goalAmount = Number(ans.replace(/,/g, ''));
+    localStorage.setItem('shisan_goal', goalAmount);
+    render();
+  }
+};
+
+function fmtNum(n) { return Number(n).toLocaleString('ja-JP', { maximumFractionDigits: 0 }); }
+function toJpy(acc) { return acc.currency === 'USD' ? (Number(acc.amount)||0) * (fxRate||0) : (Number(acc.amount)||0); }
 function ym(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
-function ymLabel(ymStr) {
-  const [y, m] = ymStr.split('-');
-  return `${y}/${Number(m)}`;
-}
-
-function getSnapshots() {
-  return snapshots;
-}
+function escapeHtml(str) { const d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+function hankoChar(name) { return name ? name.charAt(0) : '？'; }
 
 async function saveCloudData() {
   if (!window.db) return;
   try {
-    const { doc, setDoc } = window.firebaseModules;
-    await setDoc(doc(window.db, "shisan", "data"), {
-      accounts: accounts,
-      snapshots: snapshots,
-      updatedAt: new Date().toISOString()
-    });
+    await window.firebaseModules.setDoc(window.firebaseModules.doc(window.db, "shisan", "data"), { accounts, snapshots, updatedAt: new Date().toISOString() });
     showToast();
-  } catch (e) {
-    console.error('クラウド保存に失敗しました', e);
-  }
-}
-
-function recordSnapshot(targetYm) {
-  const total = accounts.reduce((s, a) => s + toJpy(a), 0);
-  snapshots = snapshots.filter(s => s.ym !== targetYm);
-  snapshots.push({ ym: targetYm, totalJpy: total, recordedAt: new Date().toISOString() });
-  snapshots.sort((a, b) => a.ym.localeCompare(b.ym));
-  saveCloudData();
-}
-
-function checkMonthBoundary() {
-  const now = new Date();
-  const curYm = ym(now);
-  const LAST_CHECK_KEY = 'last_month_check';
-  const lastCheck = localStorage.getItem(LAST_CHECK_KEY);
-  if (lastCheck && lastCheck !== curYm) {
-    const existing = snapshots.find(s => s.ym === lastCheck);
-    if (!existing) recordSnapshot(lastCheck);
-  }
-  localStorage.setItem(LAST_CHECK_KEY, curYm);
-}
-
-function renderTrend() {
-  const list = snapshots.slice().sort((a, b) => b.ym.localeCompare(a.ym));
-  const el = document.getElementById('trendList');
-  const emptyNote = document.getElementById('trendEmptyNote');
-  if (list.length === 0) {
-    el.innerHTML = '';
-    emptyNote.textContent = 'まだ記録がありません。月が変わると自動で前月分が記録されます。';
-    return;
-  }
-  emptyNote.textContent = '';
-  el.innerHTML = list.map((snap, i) => {
-    const prev = list[i + 1];
-    let diffHtml = '<span class="trend-diff flat">ー</span>';
-    if (prev) {
-      const diff = snap.totalJpy - prev.totalJpy;
-      const pct = prev.totalJpy !== 0 ? (diff / prev.totalJpy * 100) : 0;
-      const cls = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'flat');
-      const sign = diff > 0 ? '+' : '';
-      diffHtml = `<span class="trend-diff ${cls}">${sign}¥${fmtNum(diff)}（${sign}${pct.toFixed(1)}%）</span>`;
-    }
-    return `<div class="trend-row">
-      <span class="trend-month">${ymLabel(snap.ym)}</span>
-      <span class="trend-amount">¥${fmtNum(snap.totalJpy)}</span>
-      ${diffHtml}
-    </div>`;
-  }).join('');
-}
-
-function renderAllocation() {
-  const svg = document.getElementById('donutSvg');
-  const legend = document.getElementById('legendList');
-  const center = document.getElementById('donutCenter');
-  const values = accounts.map(a => Math.max(0, toJpy(a)));
-  const total = values.reduce((s, v) => s + v, 0);
-
-  if (total <= 0) {
-    svg.innerHTML = `<circle cx="60" cy="60" r="50" fill="none" stroke="var(--surface-soft)" stroke-width="16"/>`;
-    legend.innerHTML = '<div class="row-note">口座に金額を入力すると配分が表示されます</div>';
-    center.innerHTML = '';
-    return;
-  }
-
-  const r = 50, cx = 60, cy = 60;
-  const circumference = 2 * Math.PI * r;
-  let offset = 0;
-  let segs = '';
-  let legendHtml = '';
-  accounts.forEach((acc, i) => {
-    const v = Math.max(0, toJpy(acc));
-    if (v <= 0) return;
-    const pct = v / total;
-    const dash = pct * circumference;
-    const color = CHART_COLORS[i % CHART_COLORS.length];
-    segs += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${color}" stroke-width="16"
-      stroke-dasharray="${dash} ${circumference - dash}" stroke-dashoffset="${-offset}" />`;
-    offset += dash;
-    legendHtml += `<div class="legend-row">
-      <span class="legend-dot" style="background:${color}"></span>
-      <span class="legend-name">${escapeHtml(acc.institution)}</span>
-      <span class="legend-pct">${(pct * 100).toFixed(1)}%</span>
-    </div>`;
-  });
-  svg.innerHTML = segs;
-  legend.innerHTML = legendHtml;
-  center.innerHTML = `<div>総資産</div><div style="font-size:13px;margin-top:2px;">¥${fmtNum(total)}</div>`;
+  } catch (e) { console.error(e); }
 }
 
 async function initFirestore() {
   if (!window.db) return;
-  const { doc, getDoc, onSnapshot } = window.firebaseModules;
-  const docRef = doc(window.db, "shisan", "data");
-  
+  const docRef = window.firebaseModules.doc(window.db, "shisan", "data");
   try {
-    const snap = await getDoc(docRef);
-    if (!snap.exists()) {
-      accounts = defaultAccounts;
-      snapshots = [];
-      await saveCloudData();
-    }
-  } catch (e) {
-    console.error("Firestore初期化エラー:", e);
-  }
+    const snap = await window.firebaseModules.getDoc(docRef);
+    if (!snap.exists()) { accounts = defaultAccounts; await saveCloudData(); }
+  } catch (e) {}
 
-  onSnapshot(docRef, (docSnap) => {
+  window.firebaseModules.onSnapshot(docRef, (docSnap) => {
     if (docSnap.exists()) {
-      const data = docSnap.data();
-      if (data.accounts) accounts = data.accounts;
-      if (data.snapshots) snapshots = data.snapshots;
+      const d = docSnap.data();
+      if (d.accounts) accounts = d.accounts;
+      if (d.snapshots) snapshots = d.snapshots;
+      
+      // Data migration for category
       accounts.forEach(a => {
-        if (!a.currency) a.currency = 'JPY';
-        if (a.principal === undefined) a.principal = 0;
+        if(!a.category) {
+          if(a.institution.includes('証券') || a.product.includes('投信')) a.category = 'invest';
+          else if(a.institution.includes('保険') || a.institution.includes('生命')) a.category = 'insurance';
+          else a.category = 'cash';
+        }
       });
-      checkMonthBoundary();
       render();
     }
   });
-}
-
-async function loadData() {
-  try {
-    const cachedRaw = localStorage.getItem(FX_KEY);
-    if (cachedRaw) {
-      const c = JSON.parse(cachedRaw);
-      fxRate = c.rate;
-      fxFetchedAt = c.fetchedAt;
-      fxManual = !!c.manual;
-    }
-  } catch (e) {}
-
-  if (window.db) {
-    initFirestore();
-  } else {
-    window.addEventListener('firebase-ready', () => {
-      initFirestore();
-    });
-  }
-
-  accounts = defaultAccounts;
-  render();
-  fetchRate(true);
-}
-
-async function onManualRateChange(e) {
-  const val = Number(e.target.value);
-  if (!val || val <= 0) return;
-  fxRate = val;
-  fxManual = true;
-  fxFetchedAt = new Date().toISOString();
-  try {
-    localStorage.setItem(FX_KEY, JSON.stringify({ rate: fxRate, fetchedAt: fxFetchedAt, manual: true }));
-  } catch (err) { console.error(err); }
-  setFxNote('手動で設定したレートです');
-  render();
-}
-
-async function saveAccounts() {
-  await saveCloudData();
-}
-
-async function fetchRate(isInitial) {
-  const btn = document.getElementById('fxRefreshBtn');
-  if (btn) btn.classList.add('loading');
-  setFxNote('取得中...');
-  
-  try {
-    const res = await fetch('https://open.er-api.com/v6/latest/USD');
-    if (!res.ok) throw new Error('通信エラーが発生しました');
-    
-    const data = await res.json();
-    const rate = data && data.rates && data.rates.JPY;
-    
-    if (!rate) throw new Error('レートが取得できませんでした');
-    
-    fxRate = Number(rate);
-    fxFetchedAt = new Date().toISOString();
-    fxManual = false;
-    
-    localStorage.setItem(FX_KEY, JSON.stringify({ rate: fxRate, fetchedAt: fxFetchedAt, manual: false }));
-    setFxNote('自動取得成功：' + fmtDate(fxFetchedAt));
-    
-  } catch (e) {
-    console.error('為替レート取得エラー:', e);
-    if (!fxRate) {
-      fxRate = FALLBACK_RATE;
-      fxFetchedAt = null;
-      fxManual = true;
-    }
-    setFxNote('取得失敗。手動で設定してください');
-  } finally {
-    if (btn) btn.classList.remove('loading');
-    render();
-  }
-}
-
-function setFxNote(text) {
-  const el = document.getElementById('fxNote');
-  if (el) el.textContent = text;
 }
 
 function showToast() {
@@ -604,239 +480,305 @@ function showToast() {
 }
 
 function render() {
-  const list = document.getElementById('cardList');
-  list.innerHTML = '';
-
-  if (accounts.length === 0) {
-    list.innerHTML = '<div class="empty-state">まだ口座が登録されていません</div>';
-  }
-
   let totalAmount = 0;
-  let totalInvestmentPl = 0;
-  let totalInvestmentPrincipal = 0;
+  let totalPl = 0;
+  let totalPrin = 0;
 
-  accounts.forEach((acc, i) => {
-    const isUsd = acc.currency === 'USD';
-    const isInvestment = acc.institution.includes('証券') || acc.product.includes('投信') || acc.product.includes('株式');
-    const tagColor = CHART_COLORS[i % CHART_COLORS.length];
-
-    const principalVal = Number(acc.principal) || 0;
-    const currentVal = Number(acc.amount) || 0;
-    const profitLoss = currentVal - principalVal;
-    const profitLossPct = principalVal > 0 ? (profitLoss / principalVal) * 100 : 0;
-
-    // ヘッダー計算用（投資口座で、元本が1円以上設定されているもののみ合算）
-    const jpyCurrent = toJpy(acc);
+  // Group accounts
+  const groups = { cash: [], invest: [], insurance: [] };
+  accounts.forEach(a => {
+    groups[a.category] = groups[a.category] || [];
+    groups[a.category].push(a);
+    
+    const jpyCurrent = toJpy(a);
     totalAmount += jpyCurrent;
     
-    if (isInvestment && principalVal > 0) {
-      const jpyPrincipal = isUsd ? principalVal * (fxRate || 1) : principalVal;
-      totalInvestmentPl += (jpyCurrent - jpyPrincipal);
-      totalInvestmentPrincipal += jpyPrincipal;
+    if(a.category === 'invest' && a.principal > 0) {
+      const prin = a.currency === 'USD' ? a.principal * (fxRate||1) : a.principal;
+      totalPl += (jpyCurrent - prin);
+      totalPrin += prin;
     }
+  });
 
-    const card = document.createElement('div');
-    card.className = 'card';
+  // Header Total
+  document.getElementById('totalAmount').innerHTML = `<span class="yen">¥</span>${fmtNum(totalAmount)}`;
+  
+  // Goal Bar
+  document.getElementById('goalTextVal').textContent = fmtNum(goalAmount);
+  const remain = Math.max(0, goalAmount - totalAmount);
+  document.getElementById('goalRemainVal').textContent = fmtNum(remain);
+  let pct = (totalAmount / goalAmount) * 100;
+  if(pct > 100) pct = 100;
+  const fill = document.getElementById('progressFill');
+  fill.style.width = pct + '%';
+  fill.className = pct >= 90 ? 'progress-fill gold' : 'progress-fill';
+
+  // MoM Badge
+  const badge = document.getElementById('momBadge');
+  const sortedSnaps = snapshots.slice().sort((a,b) => a.ym.localeCompare(b.ym));
+  if (sortedSnaps.length > 0) {
+    const lastSnap = sortedSnaps[sortedSnaps.length - 1];
+    const diff = totalAmount - lastSnap.totalJpy;
+    if (diff !== 0) {
+      const sign = diff > 0 ? '+' : '';
+      const diffPct = lastSnap.totalJpy > 0 ? (diff / lastSnap.totalJpy * 100) : 0;
+      badge.textContent = `${sign}¥${fmtNum(diff)} (${sign}${diffPct.toFixed(1)}%)`;
+      badge.className = `mom-badge show ${diff > 0 ? 'plus' : 'minus'}`;
+    } else {
+      badge.className = 'mom-badge';
+    }
+  } else {
+    badge.className = 'mom-badge';
+  }
+
+  // Investment Profit
+  const pEl = document.getElementById('totalProfit');
+  if (totalPrin > 0) {
+    const s = totalPl >= 0 ? '+' : '';
+    pEl.className = `total-profit show ${totalPl >= 0 ? 'plus' : 'minus'}`;
+    pEl.querySelector('.val').textContent = `${s}¥${fmtNum(totalPl)} (${s}${(totalPl/totalPrin*100).toFixed(1)}%)`;
+  } else {
+    pEl.className = 'total-profit';
+  }
+
+  // Render Groups (Accordions)
+  let html = '';
+  Object.keys(catLabels).forEach((catKey, idx) => {
+    const list = groups[catKey];
+    if(!list || list.length === 0) return;
+    const catTotal = list.reduce((sum, a) => sum + toJpy(a), 0);
     
-    // 【変更箇所】「評価額（時価）」の入力欄を先に、「投資元本」を後に配置
-    card.innerHTML = `
+    // Auto-open first group or if it has items. Using details.
+    html += `
+      <details class="category-group" open>
+        <summary>
+          <span>${catLabels[catKey]}</span>
+          <span class="cat-total">¥${fmtNum(catTotal)}</span>
+        </summary>
+        <div class="cat-cards">
+    `;
+    list.forEach((acc, i) => html += createCardHtml(acc, idx * 3 + i, catKey === 'invest'));
+    html += `</div></details>`;
+  });
+  document.getElementById('accountGroups').innerHTML = html;
+
+  bindCardEvents();
+  renderTrend();
+  renderAllocation();
+
+  // FX Input
+  const fI = document.getElementById('fxRateInput');
+  if (fI && document.activeElement !== fI) fI.value = fxRate || '';
+}
+
+function createCardHtml(acc, cIdx, isInvest) {
+  const isUsd = acc.currency === 'USD';
+  const tagC = CHART_COLORS[cIdx % CHART_COLORS.length];
+  const prin = Number(acc.principal) || 0;
+  const curr = Number(acc.amount) || 0;
+  const pl = curr - prin;
+  
+  return `
+    <div class="card">
       <div class="card-top">
-        <div class="hanko" style="background:${tagColor}">${hankoChar(acc.institution)}</div>
+        <div class="hanko" style="background:${tagC}">${hankoChar(acc.institution)}</div>
         <div class="card-heading">
           <div class="inst-name">${escapeHtml(acc.institution)} ${isUsd ? '<span class="currency-tag">USD</span>' : ''}</div>
           <div class="product-name">${escapeHtml(acc.product)}</div>
         </div>
-        <button class="remove-btn" data-id="${acc.id}" title="削除">×</button>
+        <button class="remove-btn" data-id="${acc.id}">×</button>
       </div>
       <div class="card-body">
-        <div class="field ${isInvestment ? '' : 'full'}">
-          <label>${isInvestment ? '評価額（時価）' : '金額'}（${isUsd ? 'US$' : '円'}）</label>
-          <input type="text" inputmode="decimal" class="amount amount-input" data-id="${acc.id}" value="${acc.amount !== '' && acc.amount !== null && !isNaN(acc.amount) ? Number(acc.amount).toLocaleString('ja-JP', {maximumFractionDigits: 2}) : ''}" placeholder="0">
+        <div class="field ${isInvest ? '' : 'full'}">
+          <label>${isInvest ? '評価額（時価）' : '金額'}（${isUsd ? 'US$' : '円'}）</label>
+          <input type="text" class="amount-input amount" data-id="${acc.id}" value="${curr ? curr.toLocaleString('ja-JP') : ''}" placeholder="0">
         </div>
-        
-        ${isInvestment ? `
+        ${isInvest ? `
         <div class="field">
-          <label>投資元本（累計入金）</label>
-          <input type="text" inputmode="decimal" class="principal-input" data-id="${acc.id}" value="${acc.principal ? Number(acc.principal).toLocaleString('ja-JP', {maximumFractionDigits: 2}) : ''}" placeholder="0">
+          <label>投資元本</label>
+          <input type="text" class="prin-input" data-id="${acc.id}" value="${prin ? prin.toLocaleString('ja-JP') : ''}" placeholder="0">
         </div>
         ` : ''}
-
-        ${isInvestment && principalVal > 0 ? `
-        <div class="jpy-equiv" style="grid-column: 1/-1; background: ${profitLoss >= 0 ? 'rgba(30,127,92,0.08)' : 'rgba(193,68,61,0.08)'}; color: ${profitLoss >= 0 ? 'var(--up)' : 'var(--down)'};">
+        ${isInvest && prin > 0 ? `
+        <div class="jpy-equiv" style="background:${pl>=0?'rgba(74,222,128,0.1)':'rgba(248,113,113,0.1)'};">
           <span>含み損益</span>
-          <span class="val" style="color: inherit;">${profitLoss >= 0 ? '+' : ''}¥${fmtNum(profitLoss)}（${profitLoss >= 0 ? '+' : ''}${profitLossPct.toFixed(1)}%）</span>
-        </div>
-        ` : ''}
-
-        ${isUsd ? `
-        <div class="jpy-equiv">
-          <span>円換算（時価）</span>
-          <span class="val">¥${fmtNum(toJpy(acc))}</span>
+          <span class="val ${pl>=0?'up-text':''}" style="color:${pl>=0?'var(--up)':'var(--down)'}">${pl>=0?'+':''}¥${fmtNum(pl)}</span>
         </div>` : ''}
-
-        <div class="field full">
-          <label>メモ</label>
-          <input type="text" class="note-input" data-id="${acc.id}" value="${escapeHtml(acc.note || '')}" placeholder="任意のメモ">
-        </div>
+        ${isUsd ? `<div class="jpy-equiv"><span>円換算（時価）</span><span class="val">¥${fmtNum(toJpy(acc))}</span></div>` : ''}
       </div>
-      <div class="row-note"><span>${fmtDate(acc.updatedAt)}</span></div>
-    `;
-    list.appendChild(card);
+    </div>
+  `;
+}
+
+function bindCardEvents() {
+  document.querySelectorAll('.amount-input, .prin-input').forEach(el => {
+    el.addEventListener('focus', e => {
+      const raw = String(e.target.value).replace(/,/g, '');
+      e.target.value = raw !== '0' ? raw : '';
+    });
+    el.addEventListener('blur', e => {
+      const acc = accounts.find(a => a.id === e.target.dataset.id);
+      if(!acc) return;
+      const val = Number(String(e.target.value).replace(/,/g, '')) || 0;
+      if(e.target.classList.contains('amount-input')) acc.amount = val;
+      else acc.principal = val;
+      saveCloudData(); render();
+    });
   });
-
-  // ヘッダーの総資産と投資損益の描画
-  document.getElementById('totalAmount').innerHTML = `<span class="yen">¥</span>${fmtNum(totalAmount)}`;
-  
-  const profitEl = document.getElementById('totalProfit');
-  if (totalInvestmentPrincipal > 0) {
-    const plPct = (totalInvestmentPl / totalInvestmentPrincipal) * 100;
-    const sign = totalInvestmentPl >= 0 ? '+' : '';
-    const colorCls = totalInvestmentPl >= 0 ? 'plus' : 'minus';
-    profitEl.className = `total-profit show ${colorCls}`;
-    profitEl.querySelector('.val').textContent = `${sign}¥${fmtNum(totalInvestmentPl)} (${sign}${plPct.toFixed(1)}%)`;
-  } else {
-    profitEl.className = 'total-profit';
-  }
-
-  const latest = accounts.reduce((max, a) => {
-    if (!a.updatedAt) return max;
-    return (!max || new Date(a.updatedAt) > new Date(max)) ? a.updatedAt : max;
-  }, null);
-  document.getElementById('updatedAt').textContent = latest ? fmtDate(latest) : '口座を追加して記帳を始めましょう';
-
-  const fxInput = document.getElementById('fxRateInput');
-  if (fxInput && document.activeElement !== fxInput) {
-    fxInput.value = fxRate ? fxRate : '';
-  }
-  if (fxRate && fxFetchedAt && !document.getElementById('fxNote').textContent) {
-    setFxNote((fxManual ? '手動設定' : '自動取得') + '：' + fmtDate(fxFetchedAt));
-  }
-
-  list.querySelectorAll('.amount-input').forEach(inp => {
-    inp.addEventListener('focus', onAmountFocus);
-    inp.addEventListener('blur', onAmountBlur);
-    inp.addEventListener('change', onAmountChange);
+  document.querySelectorAll('.remove-btn').forEach(btn => {
+    btn.onclick = e => {
+      accounts = accounts.filter(a => a.id !== e.target.dataset.id);
+      saveCloudData(); render();
+    };
   });
-  list.querySelectorAll('.principal-input').forEach(inp => {
-    inp.addEventListener('change', onPrincipalChange);
-  });
-  list.querySelectorAll('.note-input').forEach(inp => inp.addEventListener('change', onNoteChange));
-  list.querySelectorAll('.remove-btn').forEach(btn => btn.addEventListener('click', onRemove));
-
-  renderAllocation();
-  renderTrend();
 }
 
-function escapeHtml(str) {
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
-
-function onAmountFocus(e) {
-  const id = e.target.dataset.id;
-  const acc = accounts.find(a => a.id === id);
-  if (!acc) return;
-  e.target.value = acc.amount !== 0 ? acc.amount : '';
-}
-
-function onAmountBlur(e) {
-  const id = e.target.dataset.id;
-  const acc = accounts.find(a => a.id === id);
-  if (!acc) return;
-  const val = Number(String(e.target.value).replace(/,/g, '')) || 0;
-  acc.amount = val;
-  acc.updatedAt = new Date().toISOString();
-  saveAccounts();
-  e.target.value = val !== 0 ? val.toLocaleString('ja-JP', {maximumFractionDigits: 2}) : '';
-  render(); // 全体再描画（総資産やヘッダー損益も更新するため）
-}
-
-function onAmountChange(e) {
-  const id = e.target.dataset.id;
-  const acc = accounts.find(a => a.id === id);
-  if (!acc) return;
-  const val = Number(String(e.target.value).replace(/,/g, '')) || 0;
-  acc.amount = val;
-  acc.updatedAt = new Date().toISOString();
-  saveAccounts();
-}
-
-function onPrincipalChange(e) {
-  const id = e.target.dataset.id;
-  const acc = accounts.find(a => a.id === id);
-  if (!acc) return;
-  const val = Number(String(e.target.value).replace(/,/g, '')) || 0;
-  acc.principal = val;
-  acc.updatedAt = new Date().toISOString();
-  saveAccounts();
-  render(); // 全体再描画
-}
-
-function onNoteChange(e) {
-  const id = e.target.dataset.id;
-  const acc = accounts.find(a => a.id === id);
-  if (!acc) return;
-  acc.note = e.target.value;
-  acc.updatedAt = new Date().toISOString();
-  saveAccounts();
-}
-function onRemove(e) {
-  const id = e.target.dataset.id;
-  accounts = accounts.filter(a => a.id !== id);
-  saveAccounts();
-  render();
-}
-
-const addForm = document.getElementById('addForm');
-document.getElementById('showAddBtn').addEventListener('click', () => {
-  addForm.classList.add('open');
-  document.getElementById('f_inst').focus();
-});
-document.getElementById('cancelAddBtn').addEventListener('click', () => {
-  addForm.classList.remove('open');
-  clearAddForm();
-});
-document.getElementById('confirmAddBtn').addEventListener('click', () => {
-  const inst = document.getElementById('f_inst').value.trim();
-  const product = document.getElementById('f_product').value.trim();
-  const currency = document.getElementById('f_currency').value;
-  const amount = Number(String(document.getElementById('f_amount').value).replace(/,/g, '')) || 0;
-  const note = document.getElementById('f_note').value.trim();
-  if (!inst) { document.getElementById('f_inst').focus(); return; }
+/* Add Form */
+const aForm = document.getElementById('addForm');
+document.getElementById('showAddBtn').onclick = () => aForm.classList.add('open');
+document.getElementById('cancelAddBtn').onclick = () => aForm.classList.remove('open');
+document.getElementById('confirmAddBtn').onclick = () => {
+  const i = document.getElementById('f_inst').value.trim();
+  const a = Number(String(document.getElementById('f_amount').value).replace(/,/g, '')) || 0;
+  if(!i) return;
   accounts.push({
-    id: 'a' + Date.now(),
-    institution: inst,
-    product: product || '未分類',
-    currency,
-    amount,
-    principal: 0,
-    note,
-    updatedAt: new Date().toISOString(),
+    id: 'a'+Date.now(), category: document.getElementById('f_category').value,
+    institution: i, product: document.getElementById('f_product').value || '未分類',
+    currency: document.getElementById('f_currency').value, amount: a, principal: 0
   });
-  saveAccounts();
-  render();
-  addForm.classList.remove('open');
-  clearAddForm();
-});
-document.getElementById('fxRefreshBtn').addEventListener('click', () => fetchRate(false));
-document.getElementById('fxRateInput').addEventListener('change', onManualRateChange);
-document.getElementById('recordSnapshotBtn').addEventListener('click', () => {
-  const curYm = ym(new Date());
-  recordSnapshot(curYm);
-  renderTrend();
-  showToast();
-});
+  saveCloudData(); render();
+  aForm.classList.remove('open');
+  document.querySelectorAll('#addForm input').forEach(inp => inp.value = '');
+};
 
-function clearAddForm() {
-  document.getElementById('f_inst').value = '';
-  document.getElementById('f_product').value = '';
-  document.getElementById('f_currency').value = 'JPY';
-  document.getElementById('f_amount').value = '';
-  document.getElementById('f_note').value = '';
+/* FX */
+async function fetchRate() {
+  try {
+    const res = await fetch('https://open.er-api.com/v6/latest/USD');
+    const data = await res.json();
+    fxRate = data.rates.JPY; fxFetchedAt = new Date().toISOString(); fxManual = false;
+    localStorage.setItem(FX_KEY, JSON.stringify({ rate: fxRate, at: fxFetchedAt, m: false }));
+    document.getElementById('fxNote').textContent = '自動取得成功';
+  } catch(e) {
+    if(!fxRate) { fxRate = FALLBACK_RATE; fxManual = true; }
+    document.getElementById('fxNote').textContent = '取得失敗';
+  }
+  render();
+}
+document.getElementById('fxRefreshBtn').onclick = fetchRate;
+document.getElementById('fxRateInput').onchange = e => {
+  if(Number(e.target.value)>0) {
+    fxRate = Number(e.target.value); fxManual = true; render();
+    localStorage.setItem(FX_KEY, JSON.stringify({ rate: fxRate, m: true }));
+    document.getElementById('fxNote').textContent = '手動設定';
+  }
+};
+
+/* Charts */
+function renderAllocation() {
+  const svg = document.getElementById('donutSvg'), leg = document.getElementById('legendList');
+  const values = accounts.map(a => Math.max(0, toJpy(a)));
+  const total = values.reduce((s, v) => s + v, 0);
+  if (total <= 0) { svg.innerHTML = ''; leg.innerHTML = ''; return; }
+  
+  let off = 0, segs = '', lh = '';
+  const circ = 2 * Math.PI * 50;
+  accounts.forEach((a, i) => {
+    const v = Math.max(0, toJpy(a)); if(v<=0) return;
+    const c = CHART_COLORS[i % CHART_COLORS.length];
+    const d = (v/total) * circ;
+    segs += `<circle cx="60" cy="60" r="50" fill="none" stroke="${c}" stroke-width="16" stroke-dasharray="${d} ${circ-d}" stroke-dashoffset="${-off}" />`;
+    off += d;
+    lh += `<div class="legend-row"><span class="legend-dot" style="background:${c}"></span><span class="legend-name">${escapeHtml(a.institution)}</span><span class="legend-pct">${(v/total*100).toFixed(1)}%</span></div>`;
+  });
+  svg.innerHTML = segs; leg.innerHTML = lh;
+  document.getElementById('donutCenter').innerHTML = `<div>総資産</div><div>¥${fmtNum(total)}</div>`;
 }
 
-loadData();
+function renderTrend() {
+  const el = document.getElementById('trendList');
+  const list = snapshots.slice().sort((a,b) => b.ym.localeCompare(a.ym));
+  el.innerHTML = list.map((s, i) => {
+    const p = list[i+1];
+    let dH = '<span class="trend-diff">ー</span>';
+    if(p) {
+      const d = s.totalJpy - p.totalJpy, pct = p.totalJpy ? (d/p.totalJpy*100):0;
+      dH = `<span class="trend-diff ${d>0?'up':(d<0?'down':'')}">${d>0?'+':''}¥${fmtNum(d)} (${d>0?'+':''}${pct.toFixed(1)}%)</span>`;
+    }
+    return `<div class="trend-row"><span class="trend-month">${s.ym.replace('-','/')}</span><span class="trend-amount">¥${fmtNum(s.totalJpy)}</span>${dH}</div>`;
+  }).join('');
+}
+
+/* Snapshot Modal (UX Optimization) */
+const snapModal = document.getElementById('snapModal');
+const snapInput = document.getElementById('snapInputVal');
+const snapDiffTxt = document.getElementById('snapDiffText');
+
+document.getElementById('openSnapBtn').onclick = () => {
+  const currentTotal = accounts.reduce((s, a) => s + toJpy(a), 0);
+  const sortedSnaps = snapshots.slice().sort((a,b) => a.ym.localeCompare(b.ym));
+  const lastSnap = sortedSnaps.length > 0 ? sortedSnaps[sortedSnaps.length - 1] : null;
+  
+  if (lastSnap) {
+    document.getElementById('snapPrevYm').textContent = lastSnap.ym;
+    document.getElementById('snapPrevVal').textContent = fmtNum(lastSnap.totalJpy);
+    lastSnapAmountForModal = lastSnap.totalJpy;
+  } else {
+    document.getElementById('snapPrevYm').textContent = '記録なし';
+    document.getElementById('snapPrevVal').textContent = '0';
+    lastSnapAmountForModal = 0;
+  }
+
+  snapInput.value = currentTotal.toLocaleString('ja-JP');
+  updateSnapDiff();
+  snapModal.classList.add('open');
+};
+
+document.getElementById('closeSnapBtn').onclick = () => snapModal.classList.remove('open');
+
+snapInput.addEventListener('input', (e) => {
+  const raw = e.target.value.replace(/,/g, '');
+  if (!isNaN(raw) && raw !== '') {
+    updateSnapDiff(Number(raw));
+  }
+});
+snapInput.addEventListener('blur', (e) => {
+  const raw = Number(e.target.value.replace(/,/g, '')) || 0;
+  e.target.value = raw.toLocaleString('ja-JP');
+});
+
+function updateSnapDiff(manualVal) {
+  const val = manualVal !== undefined ? manualVal : Number(snapInput.value.replace(/,/g, '')) || 0;
+  const diff = val - lastSnapAmountForModal;
+  if (lastSnapAmountForModal === 0) {
+    snapDiffTxt.textContent = `差分: --`;
+    snapDiffTxt.className = 'snap-diff';
+  } else {
+    const sign = diff > 0 ? '+' : '';
+    snapDiffTxt.textContent = `差分: ${sign}¥${fmtNum(diff)}`;
+    snapDiffTxt.className = `snap-diff ${diff > 0 ? 'plus' : (diff < 0 ? 'minus' : '')}`;
+  }
+}
+
+document.getElementById('saveSnapBtn').onclick = () => {
+  const finalVal = Number(snapInput.value.replace(/,/g, '')) || 0;
+  const curYm = ym(new Date());
+  snapshots = snapshots.filter(s => s.ym !== curYm);
+  snapshots.push({ ym: curYm, totalJpy: finalVal });
+  saveCloudData();
+  render();
+  snapModal.classList.remove('open');
+};
+
+/* Init */
+try {
+  const c = JSON.parse(localStorage.getItem(FX_KEY));
+  if(c) { fxRate = c.rate; fxManual = c.m; }
+} catch(e){}
+if(window.db) initFirestore(); else window.addEventListener('firebase-ready', initFirestore);
+accounts = defaultAccounts; render();
+if(!fxManual) fetchRate();
+
 </script>
 </body>
 </html>
