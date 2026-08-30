@@ -83,6 +83,8 @@
     font-family: 'Zen Kaku Gothic New', sans-serif;
     -webkit-font-smoothing: antialiased;
     transition: background-color 0.3s, color 0.3s;
+    overflow-x: hidden;
+    width: 100%;
   }
 
   body { min-height: 100vh; padding-bottom: 60px; }
@@ -231,16 +233,27 @@
   .remove-btn { flex: none; border: none; background: none; color: var(--ink-faint); font-size: 18px; padding: 4px 6px; cursor: pointer; }
   .remove-btn:hover { color: var(--down); }
 
-  .card-body { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .field { display: flex; flex-direction: column; gap: 4px; }
+  /* Grid areas: min-width:0 lets grid tracks shrink below the intrinsic
+     content size of <select>/<input>, which was the cause of overflow
+     that required zooming out on iPhone to see the 元本 field. */
+  .card-body { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; min-width: 0; }
+  .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .field.full { grid-column: 1 / -1; }
   .field label { font-size: 10.5px; color: var(--ink-soft); letter-spacing: 0.02em; }
   .field input, .field select {
     font-family: 'Zen Kaku Gothic New', sans-serif; border: none; border-bottom: 1px solid var(--border);
     background: transparent; font-size: 14px; padding: 5px 2px; color: var(--ink);
+    width: 100%; min-width: 0;
   }
   .field input:focus, .field select:focus { outline: none; border-bottom: 1.4px solid var(--accent); }
   .field input.amount { font-weight: 700; font-size: 17px; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+  /* On narrow phone screens, stack fields into a single column so nothing
+     needs to be squeezed or zoomed out to be readable. */
+  @media (max-width: 420px) {
+    .card-body { grid-template-columns: 1fr; }
+    .add-form { grid-template-columns: 1fr; }
+  }
 
   .jpy-equiv {
     grid-column: 1 / -1; border-radius: 10px; padding: 9px 11px;
@@ -254,7 +267,7 @@
     background: var(--accent-soft); color: var(--accent); font-weight: 700; font-size: 13px; cursor: pointer;
   }
 
-  .add-form { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-top: 6px; gap: 10px; grid-template-columns: 1fr 1fr; }
+  .add-form { display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-top: 6px; gap: 10px; grid-template-columns: 1fr 1fr; min-width: 0; }
   .add-form.open { display: grid; }
   .add-form-actions { grid-column: 1/-1; display: flex; gap: 8px; margin-top: 4px; }
   .btn-primary, .btn-ghost { flex: 1; padding: 11px; border-radius: 10px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; }
@@ -391,11 +404,11 @@
       </div>
       <div class="field" id="newAmtFieldWrap">
         <label id="newAmtLabel">現在評価額</label>
-        <input type="number" id="newAmt" placeholder="0" class="amount" step="any">
+        <input type="text" inputmode="decimal" id="newAmt" placeholder="0" class="amount amount-input">
       </div>
       <div class="field" id="newPrinFieldWrap">
         <label>元本 (任意)</label>
-        <input type="number" id="newPrin" placeholder="0" step="any">
+        <input type="text" inputmode="decimal" id="newPrin" placeholder="0" class="amount-input">
       </div>
       <div class="field full">
         <label>メモ (任意)</label>
@@ -444,7 +457,7 @@
       </div>
       <div class="snap-input-wrap">
         <label>確定する総資産額 (修正可能)</label>
-        <input type="number" id="snapInputVal" step="1">
+        <input type="text" inputmode="decimal" id="snapInputVal" class="amount-input">
       </div>
       <div class="snap-diff" id="snapDiff"></div>
       <div class="modal-actions">
@@ -460,7 +473,7 @@
       <h3>目標額の設定</h3>
       <div class="snap-input-wrap">
         <label>目標総資産額 (円)</label>
-        <input type="number" id="goalInputVal" step="10000">
+        <input type="text" inputmode="decimal" id="goalInputVal" class="amount-input">
       </div>
       <div class="modal-actions">
         <button class="btn-ghost" id="goalCancelBtn">キャンセル</button>
@@ -553,6 +566,52 @@
 
   function fmt(num) { return Number(num).toLocaleString('en-US'); }
   function calcJpy(amt, curr) { return curr === 'USD' ? amt * usdRate : amt; }
+
+  // ---- 金額入力欄: 3桁カンマ区切り & カンマを除いた数値化 ----
+  function parseAmount(str) {
+    if (typeof str !== 'string') str = String(str ?? '');
+    const n = parseFloat(str.replace(/,/g, ''));
+    return isNaN(n) ? 0 : n;
+  }
+
+  function formatWithCommas(input) {
+    const cursorFromEnd = input.value.length - input.selectionEnd;
+    let raw = input.value.replace(/[^\d.]/g, '');
+
+    // 小数点は最初の1つだけ有効にする
+    const firstDot = raw.indexOf('.');
+    if (firstDot !== -1) {
+      raw = raw.slice(0, firstDot + 1) + raw.slice(firstDot + 1).replace(/\./g, '');
+    }
+
+    let [intPart, decPart] = raw.split('.');
+    intPart = (intPart || '').replace(/^0+(?=\d)/, '');
+    const formattedInt = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+    let newVal = formattedInt;
+    if (decPart !== undefined) newVal += '.' + decPart;
+
+    input.value = newVal;
+    const newPos = Math.max(newVal.length - cursorFromEnd, 0);
+    input.setSelectionRange(newPos, newPos);
+  }
+
+  // すべての金額入力欄(.amount-input)に対して、入力時のみカンマ整形を行う
+  document.addEventListener('input', (e) => {
+    if (e.target && e.target.classList && e.target.classList.contains('amount-input')) {
+      formatWithCommas(e.target);
+    }
+  });
+
+  // ---- ホイールスクロールで数値入力欄の値が変わってしまう問題への対策 ----
+  // フォーカス中の数値/金額入力欄の上でスクロールされたら、即座にフォーカスを外す。
+  // ページのスクロール自体は妨げず、値の変更だけを防ぐ。
+  document.addEventListener('wheel', () => {
+    const ae = document.activeElement;
+    if (ae && ae.tagName === 'INPUT' && (ae.type === 'number' || ae.classList.contains('amount-input'))) {
+      ae.blur();
+    }
+  }, { passive: true });
   
   function updateFxRateLocally() {
     const val = parseFloat(document.getElementById('usdRate').value);
@@ -622,11 +681,11 @@
       extraFieldsHtml = `
         <div class="field">
           <label>評価額 (${acc.currency})</label>
-          <input type="number" class="amount update-amt" data-id="${acc.id}" value="${acc.amount}" step="any">
+          <input type="text" inputmode="decimal" class="amount amount-input update-amt" data-id="${acc.id}" value="${fmt(acc.amount)}">
         </div>
         <div class="field">
           <label>元本 (${acc.currency})</label>
-          <input type="number" class="update-prin" data-id="${acc.id}" value="${acc.principal || 0}" step="any">
+          <input type="text" inputmode="decimal" class="amount-input update-prin" data-id="${acc.id}" value="${fmt(acc.principal || 0)}">
         </div>
         <div class="field full">
           <label>メモ</label>
@@ -641,7 +700,7 @@
       extraFieldsHtml = `
         <div class="field full">
           <label>金額 (${acc.currency})</label>
-          <input type="number" class="amount update-amt" data-id="${acc.id}" value="${acc.amount}" step="any">
+          <input type="text" inputmode="decimal" class="amount amount-input update-amt" data-id="${acc.id}" value="${fmt(acc.amount)}">
         </div>
         <div class="field full">
           <label>メモ</label>
@@ -867,8 +926,8 @@
     const institution = document.getElementById('newInst').value.trim() || '未設定';
     const product = document.getElementById('newProd').value.trim();
     const currency = document.getElementById('newCurr').value;
-    const amount = parseFloat(document.getElementById('newAmt').value) || 0;
-    const principal = parseFloat(document.getElementById('newPrin').value) || 0;
+    const amount = parseAmount(document.getElementById('newAmt').value);
+    const principal = parseAmount(document.getElementById('newPrin').value);
     const note = document.getElementById('newNote').value.trim();
 
     const newAcc = {
@@ -902,9 +961,9 @@
     } else if (e.target.classList.contains('update-prod')) {
       acc.product = e.target.value;
     } else if (e.target.classList.contains('update-amt')) {
-      acc.amount = parseFloat(e.target.value) || 0;
+      acc.amount = parseAmount(e.target.value);
     } else if (e.target.classList.contains('update-prin')) {
-      acc.principal = parseFloat(e.target.value) || 0;
+      acc.principal = parseAmount(e.target.value);
     } else if (e.target.classList.contains('update-note')) {
       acc.note = e.target.value;
     }
@@ -938,15 +997,15 @@
   const goalWrap = document.getElementById('goalWrap');
   const goalModal = document.getElementById('goalModal');
   goalWrap.addEventListener('click', () => {
-    document.getElementById('goalInputVal').value = goalAmount;
+    document.getElementById('goalInputVal').value = fmt(goalAmount);
     goalModal.classList.add('open');
   });
   document.getElementById('goalCancelBtn').addEventListener('click', () => {
     goalModal.classList.remove('open');
   });
   document.getElementById('goalSaveBtn').addEventListener('click', () => {
-    const val = parseFloat(document.getElementById('goalInputVal').value);
-    if (!isNaN(val) && val > 0) {
+    const val = parseAmount(document.getElementById('goalInputVal').value);
+    if (val > 0) {
       goalAmount = val;
       saveCloudData();
       render();
@@ -962,7 +1021,7 @@
     const prev = snapshots.length > 0 ? snapshots[snapshots.length - 1].amount : 0;
     document.getElementById('snapPrevVal').innerText = `¥${fmt(prev)}`;
     document.getElementById('snapCalcVal').innerText = `¥${fmt(total)}`;
-    document.getElementById('snapInputVal').value = total;
+    document.getElementById('snapInputVal').value = fmt(total);
 
     const diff = total - prev;
     const diffEl = document.getElementById('snapDiff');
@@ -978,8 +1037,7 @@
   });
 
   document.getElementById('snapSaveBtn').addEventListener('click', () => {
-    const val = parseFloat(document.getElementById('snapInputVal').value);
-    if (isNaN(val)) return;
+    const val = parseAmount(document.getElementById('snapInputVal').value);
 
     const d = new Date();
     const monthStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;
