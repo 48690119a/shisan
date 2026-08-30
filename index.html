@@ -66,6 +66,17 @@
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
+  /* Chrome, Safari, Edge, Opera の数値入力欄の増減矢印（スピナー）を非表示にする */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  /* Firefox の数値入力欄の増減矢印を非表示にする */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
   html, body {
     background: var(--bg);
     color: var(--ink);
@@ -511,7 +522,7 @@
         await setDoc(docRef, { accounts, snapshots, goalAmount });
       }
       render();
-      fetchFx(true); // 起動時に自動で為替取得を試みる
+      fetchFx(true);
       
       onSnapshot(docRef, (docSnap) => {
         if(docSnap.exists()){
@@ -596,7 +607,6 @@
     let extraFieldsHtml = '';
 
     if (acc.category === 'invest') {
-      // 株式・投資信託の場合：評価額と元本を表示
       let profitHtml = '';
       if (acc.principal > 0) {
         const diff = cJpy - pJpy;
@@ -626,7 +636,6 @@
         ${profitHtml}
       `;
     } else {
-      // その他（現金・保険等・仮想通貨）の場合：通常の金額のみ
       let jpyHtml = acc.currency === 'USD' ? `<div class="jpy-equiv"><span>円換算:</span><span class="val">¥${fmt(Math.round(cJpy))}</span></div>` : '';
 
       extraFieldsHtml = `
@@ -686,7 +695,6 @@
 
     document.getElementById('totalJpy').innerText = fmt(Math.round(total));
     
-    // 総損益（株式・投資信託の元本がある場合のみ表示）
     const profitBox = document.getElementById('totalProfitBox');
     const profitVal = document.getElementById('totalProfitVal');
     const investAccountsTotal = grouped.invest.reduce((sum, a) => sum + calcJpy(a.amount, a.currency), 0);
@@ -702,7 +710,6 @@
       profitBox.classList.remove('show');
     }
 
-    // 目標進捗バーと表示
     document.getElementById('goalDisplayVal').innerText = fmt(goalAmount);
     let pct = (total / goalAmount) * 100;
     if(pct > 100) pct = 100;
@@ -713,301 +720,282 @@
 
     let colorClass = 'red';
     if (pct >= 100) colorClass = 'green';
-    else if (pct >= 95) colorClass = 'yellow';
-    else if (pct >= 80) colorClass = 'orange';
+    else if (pct >= 50) colorClass = 'yellow';
+    else if (pct >= 25) colorClass = 'orange';
     fill.className = `progress-fill ${colorClass}`;
 
-    // MoMバッジ
-    snapshots.sort((a,b) => a.month.localeCompare(b.month));
-    const badge = document.getElementById('momBadge');
-    if (snapshots.length > 0) {
-      const lastSnap = snapshots[snapshots.length - 1];
-      const diff = total - lastSnap.amount;
-      if(Math.abs(diff) > 100) {
-        badge.classList.add('show');
-        badge.className = `mom-badge show ${diff > 0 ? 'plus' : 'minus'}`;
-        badge.innerText = `前月比 ${diff > 0 ? '+' : '-'}¥${fmt(Math.round(Math.abs(diff)))}`;
-      } else { badge.classList.remove('show'); }
-    } else { badge.classList.remove('show'); }
-
-    // リスト描画
+    const listEl = document.getElementById('accountsList');
     let listHtml = '';
-    const keys = ['cash', 'invest', 'insurance', 'crypto'];
-    keys.forEach(k => {
-      const list = grouped[k];
-      if (list.length === 0) return;
-      const subTotal = list.reduce((sum, a) => sum + calcJpy(a.amount, a.currency), 0);
+    
+    for (const [catKey, catAccs] of Object.entries(grouped)) {
+      const catTotalJpy = catAccs.reduce((sum, a) => sum + calcJpy(a.amount, a.currency), 0);
+      if (catAccs.length === 0) continue;
+      
       listHtml += `
         <details class="category-group" open>
-          <summary>
-            <div style="width:10px;height:10px;border-radius:3px;background:${catColors[k]}"></div>
-            ${catLabels[k]}
-            <span class="cat-total">¥${fmt(Math.round(subTotal))}</span>
-          </summary>
-          <div>
-            ${list.map(createCardHtml).join('')}
-          </div>
+          <summary>${catLabels[catKey]} <span class="cat-total">¥${fmt(Math.round(catTotalJpy))}</span></summary>
+          ${catAccs.map(createCardHtml).join('')}
         </details>
       `;
-    });
-    document.getElementById('accountsList').innerHTML = listHtml;
-    
-    bindCardEvents();
-    renderChart(grouped, total);
-    renderTrends();
+    }
+    listEl.innerHTML = listHtml;
+
+    renderChart();
+    renderTrend();
   }
 
-  function bindCardEvents() {
-    document.querySelectorAll('.update-amt').forEach(el => {
-      el.addEventListener('input', e => {
-        const acc = accounts.find(a => a.id === e.target.dataset.id);
-        if(acc) { acc.amount = parseFloat(e.target.value) || 0; saveCloudData(); render(); }
-      });
-    });
-    document.querySelectorAll('.update-prin').forEach(el => {
-      el.addEventListener('input', e => {
-        const acc = accounts.find(a => a.id === e.target.dataset.id);
-        if(acc) { acc.principal = parseFloat(e.target.value) || 0; saveCloudData(); render(); }
-      });
-    });
-    document.querySelectorAll('.update-inst').forEach(el => {
-      el.addEventListener('input', e => {
-        const acc = accounts.find(a => a.id === e.target.dataset.id);
-        if(acc) { acc.institution = e.target.value; saveCloudData(); }
-      });
-    });
-    document.querySelectorAll('.update-prod').forEach(el => {
-      el.addEventListener('input', e => {
-        const acc = accounts.find(a => a.id === e.target.dataset.id);
-        if(acc) { acc.product = e.target.value; saveCloudData(); }
-      });
-    });
-    document.querySelectorAll('.update-note').forEach(el => {
-      el.addEventListener('change', e => {
-        const acc = accounts.find(a => a.id === e.target.dataset.id);
-        if(acc) { acc.note = e.target.value; saveCloudData(); }
-      });
-    });
-    document.querySelectorAll('.cat-select').forEach(el => {
-      el.addEventListener('change', e => {
-        const acc = accounts.find(a => a.id === e.target.dataset.id);
-        if(acc) { acc.category = e.target.value; saveCloudData(); render(); }
-      });
-    });
-    document.querySelectorAll('.remove-btn').forEach(el => {
-      el.addEventListener('click', e => {
-        if(confirm('削除しますか？')) {
-          accounts = accounts.filter(a => a.id !== e.target.dataset.id);
-          saveCloudData(); render();
-        }
-      });
-    });
-  }
+  function renderChart() {
+    const svg = document.getElementById('donutSvg');
+    const legend = document.getElementById('donutLegend');
+    const catTotals = { cash: 0, invest: 0, insurance: 0, crypto: 0 };
+    let total = 0;
 
-  function renderChart(grouped, total) {
-    if(!grouped || total === 0) {
-      document.getElementById('donutSvg').innerHTML = '';
-      document.getElementById('donutLegend').innerHTML = '';
+    accounts.forEach(a => {
+      const jpy = calcJpy(a.amount, a.currency);
+      total += jpy;
+      if (catTotals[a.category] !== undefined) {
+        catTotals[a.category] += jpy;
+      } else {
+        catTotals.cash += jpy;
+      }
+    });
+
+    document.getElementById('donutTotal').innerText = `¥${fmt(Math.round(total))}`;
+
+    if (total === 0) {
+      svg.innerHTML = `<circle cx="16" cy="16" r="15.9155" fill="none" stroke="var(--border)" stroke-width="3.8"></circle>`;
+      legend.innerHTML = `<div style="text-align:center;font-size:12px;color:var(--ink-soft);">データがありません</div>`;
       return;
     }
-    document.getElementById('donutTotal').innerText = `¥${fmt(Math.round(total))}`;
-    
-    let svgHtml = '';
-    let legHtml = '';
-    let accPct = 0;
-    
-    const keys = ['cash', 'invest', 'insurance', 'crypto'];
-    keys.forEach(k => {
-      const subTotal = grouped[k].reduce((sum, a) => sum + calcJpy(a.amount, a.currency), 0);
-      if(subTotal === 0) return;
-      
-      const pct = subTotal / total;
-      const dasharray = `${pct * 100} 100`;
-      const dashoffset = -(accPct * 100);
-      
-      svgHtml += `<circle cx="16" cy="16" r="14" fill="none" stroke="${catColors[k]}" stroke-width="4" stroke-dasharray="${dasharray}" stroke-dashoffset="${dashoffset}"></circle>`;
-      
-      legHtml += `
+
+    let cumulativePercent = 0;
+    let svgContent = '';
+    let legendContent = '';
+
+    for (const [catKey, val] of Object.entries(catTotals)) {
+      if (val <= 0) continue;
+      const pct = (val / total) * 100;
+      const dashArray = `${pct} ${100 - pct}`;
+      const dashOffset = 100 - cumulativePercent;
+      cumulativePercent += pct;
+
+      svgContent += `
+        <circle cx="16" cy="16" r="15.9155" fill="none" 
+          stroke="${catColors[catKey]}" stroke-width="3.8" 
+          stroke-dasharray="${dashArray}" stroke-dashoffset="${dashOffset}">
+        </circle>
+      `;
+
+      legendContent += `
         <div class="legend-row">
-          <div class="legend-dot" style="background:${catColors[k]}"></div>
-          <div class="legend-name">${catLabels[k]}</div>
-          <div class="legend-pct">${(pct*100).toFixed(1)}%</div>
+          <div class="legend-dot" style="background:${catColors[catKey]}"></div>
+          <div class="legend-name">${catLabels[catKey]}</div>
+          <div class="legend-pct">${pct.toFixed(1)}%</div>
+          <div style="font-weight:700;font-size:12.5px;color:var(--ink);width:80px;text-align:right;">¥${fmt(Math.round(val))}</div>
         </div>
       `;
-      accPct += pct;
-    });
+    }
 
-    const centerColor = isDark ? '#1E1E24' : '#FFFFFF';
-    svgHtml = `<circle cx="16" cy="16" r="14" fill="none" stroke="${centerColor}" stroke-width="4" opacity="0.1"></circle>` + svgHtml;
-    
-    document.getElementById('donutSvg').innerHTML = svgHtml;
-    document.getElementById('donutLegend').innerHTML = legHtml;
+    svg.innerHTML = svgContent;
+    legend.innerHTML = legendContent;
   }
 
-  function renderTrends() {
-    const list = document.getElementById('trendList');
-    if (snapshots.length === 0) {
-      list.innerHTML = `<div style="font-size:12px;color:var(--ink-faint);text-align:center;padding:10px;">記録がありません</div>`;
+  function renderTrend() {
+    const trendEl = document.getElementById('trendList');
+    if (!snapshots || snapshots.length === 0) {
+      trendEl.innerHTML = `<div style="font-size:12px;color:var(--ink-soft);text-align:center;padding:8px;">スナップショットの記録がありません</div>`;
       return;
     }
-    
+
+    const sorted = [...snapshots].sort((a, b) => a.month.localeCompare(b.month));
     let html = '';
-    [...snapshots].reverse().forEach((s, i, arr) => {
-      const prev = arr[i+1];
-      let diffHtml = '<span class="trend-diff">-</span>';
-      if (prev) {
-        const diff = s.amount - prev.amount;
-        if (diff !== 0) {
-          const sign = diff > 0 ? '+' : '';
-          const cls = diff > 0 ? 'up' : 'down';
-          diffHtml = `<span class="trend-diff ${cls}">${sign}¥${fmt(Math.round(diff))}</span>`;
-        }
+    
+    for (let i = 0; i < sorted.length; i++) {
+      const cur = sorted[i];
+      let diffStr = '-';
+      let diffClass = '';
+      if (i > 0) {
+        const prevVal = sorted[i - 1].amount;
+        const diff = cur.amount - prevVal;
+        const sign = diff >= 0 ? '+' : '';
+        diffStr = `${sign}¥${fmt(diff)}`;
+        diffClass = diff >= 0 ? 'up' : 'down';
       }
       html += `
         <div class="trend-row">
-          <div class="trend-month">${s.month}</div>
-          <div class="trend-amount">¥${fmt(Math.round(s.amount))}</div>
-          ${diffHtml}
+          <div class="trend-month">${cur.month}</div>
+          <div class="trend-amount">¥${fmt(cur.amount)}</div>
+          <div class="trend-diff ${diffClass}">${diffStr}</div>
         </div>
       `;
-    });
-    list.innerHTML = html;
+    }
+    trendEl.innerHTML = html;
   }
 
-  // --- Goal Edit Modal Logic ---
-  document.getElementById('goalWrap').addEventListener('click', () => {
-    document.getElementById('goalInputVal').value = goalAmount;
-    document.getElementById('goalModal').classList.add('open');
-  });
-  document.getElementById('goalCancelBtn').addEventListener('click', () => {
-    document.getElementById('goalModal').classList.remove('open');
-  });
-  document.getElementById('goalSaveBtn').addEventListener('click', () => {
-    const val = parseFloat(document.getElementById('goalInputVal').value);
-    if(val > 0) {
-      goalAmount = val;
-      saveCloudData();
-      render();
-    }
-    document.getElementById('goalModal').classList.remove('open');
+  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+  document.getElementById('fxRefresh').addEventListener('click', () => fetchFx(false));
+  document.getElementById('usdRate').addEventListener('input', updateFxRateLocally);
+
+  const addBtn = document.getElementById('addBtn');
+  const addForm = document.getElementById('addForm');
+  addBtn.addEventListener('click', () => {
+    addForm.classList.toggle('open');
+    addBtn.style.display = addForm.classList.contains('open') ? 'none' : 'block';
   });
 
-  // --- Snapshot Modal Logic ---
-  const d = new Date();
-  const currentMonthStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;
-  
-  document.getElementById('takeSnapshotBtn').addEventListener('click', () => {
-    const currentTotalCalc = accounts.reduce((sum, a) => sum + calcJpy(a.amount, a.currency), 0);
-    const lastSnap = snapshots.length > 0 ? snapshots[snapshots.length-1] : null;
-    let prevVal = 0;
-    if(lastSnap) {
-      prevVal = lastSnap.amount;
-      document.getElementById('snapPrevVal').innerText = `¥${fmt(Math.round(prevVal))} (${lastSnap.month})`;
-    } else {
-      document.getElementById('snapPrevVal').innerText = `なし`;
-    }
-    
-    document.getElementById('snapCalcVal').innerText = `¥${fmt(Math.round(currentTotalCalc))}`;
-    document.getElementById('snapModalTitle').innerText = `${currentMonthStr}の資産を記録`;
-    
-    const input = document.getElementById('snapInputVal');
-    input.value = Math.round(currentTotalCalc);
-    updateSnapDiff(Math.round(currentTotalCalc), prevVal);
-    
-    input.oninput = (e) => { updateSnapDiff(parseFloat(e.target.value)||0, prevVal); };
-    document.getElementById('snapModal').classList.add('open');
-  });
-
-  function updateSnapDiff(current, prev) {
-    const diffEl = document.getElementById('snapDiff');
-    if (prev === 0) { diffEl.innerText = ''; return; }
-    const diff = current - prev;
-    const sign = diff > 0 ? '+' : '';
-    const cls = diff > 0 ? 'plus' : (diff < 0 ? 'minus' : '');
-    diffEl.className = `snap-diff ${cls}`;
-    diffEl.innerText = `前月比: ${sign}¥${fmt(Math.round(diff))}`;
-  }
-
-  document.getElementById('snapCancelBtn').addEventListener('click', () => {
-    document.getElementById('snapModal').classList.remove('open');
-  });
-
-  document.getElementById('snapSaveBtn').addEventListener('click', () => {
-    const val = parseFloat(document.getElementById('snapInputVal').value) || 0;
-    const existingIdx = snapshots.findIndex(s => s.month === currentMonthStr);
-    if(existingIdx >= 0) {
-      snapshots[existingIdx].amount = val;
-    } else {
-      snapshots.push({ month: currentMonthStr, amount: val });
-    }
-    saveCloudData();
-    render();
-    document.getElementById('snapModal').classList.remove('open');
-  });
-
-  // --- Add Form Logic & Category Dynamic Switch ---
-  function updateAddFormCategoryUI() {
-    const cat = document.getElementById('newCat').value;
-    const amtWrap = document.getElementById('newAmtFieldWrap');
-    const prinWrap = document.getElementById('newPrinFieldWrap');
-    const amtLabel = document.getElementById('newAmtLabel');
-
-    if (cat === 'invest') {
-      amtLabel.innerText = '評価額';
-      prinWrap.style.display = 'flex';
-      amtWrap.className = 'field';
-    } else {
-      amtLabel.innerText = '金額';
-      prinWrap.style.display = 'none';
-      document.getElementById('newPrin').value = '0';
-      amtWrap.className = 'field full';
-    }
-  }
-
-  document.getElementById('newCat').addEventListener('change', updateAddFormCategoryUI);
-
-  document.getElementById('addBtn').addEventListener('click', () => {
-    updateAddFormCategoryUI();
-    document.getElementById('addForm').classList.toggle('open');
-  });
   document.getElementById('cancelAddBtn').addEventListener('click', () => {
-    document.getElementById('addForm').classList.remove('open');
+    addForm.classList.remove('open');
+    addBtn.style.display = 'block';
+    clearAddForm();
   });
-  document.getElementById('saveAddBtn').addEventListener('click', () => {
-    const cat = document.getElementById('newCat').value;
-    const inst = document.getElementById('newInst').value || '未設定';
-    const prod = document.getElementById('newProd').value || '未設定';
-    const curr = document.getElementById('newCurr').value;
-    const amt = parseFloat(document.getElementById('newAmt').value) || 0;
-    const prin = cat === 'invest' ? (parseFloat(document.getElementById('newPrin').value) || 0) : 0;
-    const note = document.getElementById('newNote').value || '';
-    
-    accounts.push({
-      id: 'a_' + Date.now(),
-      category: cat,
-      institution: inst,
-      product: prod,
-      currency: curr,
-      amount: amt,
-      principal: prin,
-      note: note
-    });
-    
+
+  document.getElementById('newCurr').addEventListener('change', (e) => {
+    const curr = e.target.value;
+    document.getElementById('newAmtLabel').innerText = curr === 'USD' ? '現在評価額 (USD)' : '現在評価額';
+  });
+
+  function clearAddForm() {
     document.getElementById('newInst').value = '';
     document.getElementById('newProd').value = '';
     document.getElementById('newAmt').value = '';
     document.getElementById('newPrin').value = '';
     document.getElementById('newNote').value = '';
-    document.getElementById('addForm').classList.remove('open');
-    
+  }
+
+  document.getElementById('saveAddBtn').addEventListener('click', () => {
+    const category = document.getElementById('newCat').value;
+    const institution = document.getElementById('newInst').value.trim() || '未設定';
+    const product = document.getElementById('newProd').value.trim();
+    const currency = document.getElementById('newCurr').value;
+    const amount = parseFloat(document.getElementById('newAmt').value) || 0;
+    const principal = parseFloat(document.getElementById('newPrin').value) || 0;
+    const note = document.getElementById('newNote').value.trim();
+
+    const newAcc = {
+      id: 'acc_' + Date.now(),
+      category,
+      institution,
+      product,
+      currency,
+      amount,
+      principal,
+      note
+    };
+
+    accounts.push(newAcc);
     saveCloudData();
     render();
+    addForm.classList.remove('open');
+    addBtn.style.display = 'block';
+    clearAddForm();
   });
 
-  document.getElementById('usdRate').addEventListener('change', updateFxRateLocally);
-  document.getElementById('fxRefresh').addEventListener('click', () => fetchFx(false));
-  document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+  const accountsListEl = document.getElementById('accountsList');
+  accountsListEl.addEventListener('input', (e) => {
+    const id = e.target.dataset.id;
+    if (!id) return;
+    const acc = accounts.find(a => a.id === id);
+    if (!acc) return;
 
+    if (e.target.classList.contains('update-inst')) {
+      acc.institution = e.target.value;
+    } else if (e.target.classList.contains('update-prod')) {
+      acc.product = e.target.value;
+    } else if (e.target.classList.contains('update-amt')) {
+      acc.amount = parseFloat(e.target.value) || 0;
+    } else if (e.target.classList.contains('update-prin')) {
+      acc.principal = parseFloat(e.target.value) || 0;
+    } else if (e.target.classList.contains('update-note')) {
+      acc.note = e.target.value;
+    }
+    saveCloudData();
+  });
+
+  accountsListEl.addEventListener('change', (e) => {
+    const id = e.target.dataset.id;
+    if (!id) return;
+    const acc = accounts.find(a => a.id === id);
+    if (!acc) return;
+
+    if (e.target.classList.contains('cat-select')) {
+      acc.category = e.target.value;
+      saveCloudData();
+      render();
+    }
+  });
+
+  accountsListEl.addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-btn')) {
+      const id = e.target.dataset.id;
+      if (confirm('この口座を削除しますか？')) {
+        accounts = accounts.filter(a => a.id !== id);
+        saveCloudData();
+        render();
+      }
+    }
+  });
+
+  const goalWrap = document.getElementById('goalWrap');
+  const goalModal = document.getElementById('goalModal');
+  goalWrap.addEventListener('click', () => {
+    document.getElementById('goalInputVal').value = goalAmount;
+    goalModal.classList.add('open');
+  });
+  document.getElementById('goalCancelBtn').addEventListener('click', () => {
+    goalModal.classList.remove('open');
+  });
+  document.getElementById('goalSaveBtn').addEventListener('click', () => {
+    const val = parseFloat(document.getElementById('goalInputVal').value);
+    if (!isNaN(val) && val > 0) {
+      goalAmount = val;
+      saveCloudData();
+      render();
+    }
+    goalModal.classList.remove('open');
+  });
+
+  const snapModal = document.getElementById('snapModal');
+  document.getElementById('takeSnapshotBtn').addEventListener('click', () => {
+    let total = accounts.reduce((sum, a) => sum + calcJpy(a.amount, a.currency), 0);
+    total = Math.round(total);
+
+    const prev = snapshots.length > 0 ? snapshots[snapshots.length - 1].amount : 0;
+    document.getElementById('snapPrevVal').innerText = `¥${fmt(prev)}`;
+    document.getElementById('snapCalcVal').innerText = `¥${fmt(total)}`;
+    document.getElementById('snapInputVal').value = total;
+
+    const diff = total - prev;
+    const diffEl = document.getElementById('snapDiff');
+    const sign = diff >= 0 ? '+' : '';
+    diffEl.innerText = `前回差分: ${sign}¥${fmt(diff)}`;
+    diffEl.className = `snap-diff ${diff >= 0 ? 'plus' : 'minus'}`;
+
+    snapModal.classList.add('open');
+  });
+
+  document.getElementById('snapCancelBtn').addEventListener('click', () => {
+    snapModal.classList.remove('open');
+  });
+
+  document.getElementById('snapSaveBtn').addEventListener('click', () => {
+    const val = parseFloat(document.getElementById('snapInputVal').value);
+    if (isNaN(val)) return;
+
+    const d = new Date();
+    const monthStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;
+
+    const existingIndex = snapshots.findIndex(s => s.month === monthStr);
+    if (existingIndex >= 0) {
+      snapshots[existingIndex].amount = Math.round(val);
+    } else {
+      snapshots.push({ month: monthStr, amount: Math.round(val) });
+    }
+
+    saveCloudData();
+    renderTrend();
+    snapModal.classList.remove('open');
+    showToast();
+  });
 </script>
 </body>
 </html>
